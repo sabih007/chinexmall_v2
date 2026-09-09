@@ -27,6 +27,7 @@ export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 /** Which query keys the filter UI owns (everything else is preserved). */
 const FILTER_KEYS = [
   "category",
+  "tag",
   "type",
   "brand",
   "color",
@@ -179,6 +180,7 @@ export function FilterPanel({
   const selected = useMemo(
     () => ({
       category: searchParams.getAll("category"),
+      tag: searchParams.getAll("tag"),
       type: searchParams.getAll("type"),
       brand: searchParams.getAll("brand"),
       color: searchParams.getAll("color"),
@@ -274,6 +276,22 @@ export function FilterPanel({
           On sale only
         </label>
       </FilterGroup>
+
+      {facets.tags.length > 0 && (
+        <FilterGroup title="Tags">
+          <div className="max-h-60 overflow-y-auto pr-1">
+            {facets.tags.map((f) => (
+              <CheckRow
+                key={f.value}
+                label={f.label}
+                count={f.count}
+                checked={selected.tag.includes(f.value)}
+                onChange={() => toggleMulti("tag", f.value)}
+              />
+            ))}
+          </div>
+        </FilterGroup>
+      )}
 
       <FilterGroup title="Product type">
         <div className="max-h-60 overflow-y-auto pr-1">

@@ -57,6 +57,7 @@ export function queryFromSearchParams(
       ...(base.categories ?? []),
       ...toArray(params.category),
     ].filter(Boolean),
+    tags: [...(base.tags ?? []), ...toArray(params.tag)].filter(Boolean),
     productTypes: toArray(params.type),
     brands: toArray(params.brand),
     colors: toArray(params.color),

@@ -1,6 +1,7 @@
 "use client";
 
 import { Heart, MessageCircle, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { QuantityStepper } from "@/components/cart/CartDrawer";
@@ -211,6 +212,22 @@ export function ProductDetail({ product }: { product: Product }) {
               </li>
             ))}
           </ul>
+
+          {/* Tags: the operator's own labels, each a way back into the shop. */}
+          {product.tags.length > 0 && (
+            <ul className="mt-7 flex flex-wrap gap-2">
+              {product.tags.map((tag) => (
+                <li key={tag}>
+                  <Link
+                    href={`/shop?tag=${encodeURIComponent(tag)}`}
+                    className="inline-block rounded-full bg-sand px-3 py-1.5 text-[12px] text-ink-soft transition-colors hover:bg-sand-deep hover:text-ink"
+                  >
+                    {tag.replace(/-/g, " ")}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
 
           {/* Details accordions */}
           <Accordion

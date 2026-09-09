@@ -6,6 +6,7 @@
  * whether to accept the order and what it costs — so the two can never drift.
  */
 
+import { couponDiscount } from "./coupons";
 import {
   bankAccount,
   deliveryMethods,
@@ -16,6 +17,7 @@ import {
   type PaymentMethod,
 } from "./site";
 import type {
+  Coupon,
   CustomerDetails,
   DeliveryMethodId,
   OrderLine,
@@ -162,6 +164,8 @@ export function orderTotals(
   lines: Pick<OrderLine, "unitPrice" | "compareAtPrice" | "quantity">[],
   delivery: DeliveryMethodId,
   payment: PaymentMethodId,
+  /** Already checked against this basket by the caller, or null. */
+  coupon?: Coupon | null,
 ): OrderTotals {
   const subtotal = lines.reduce((n, l) => n + l.unitPrice * l.quantity, 0);
   const savings = lines.reduce(
@@ -172,12 +176,19 @@ export function orderTotals(
   const shipping = deliveryFee(delivery, subtotal);
   const codFee = paymentMethod(payment).fee;
 
+  /* The free-delivery threshold is judged on the subtotal, before any coupon,
+     so a code can never push a basket back under it mid-checkout. */
+  const discount = coupon
+    ? couponDiscount(coupon, { subtotal, deliveryFee: shipping })
+    : 0;
+
   return {
     subtotal,
     savings,
     delivery: shipping,
+    discount,
     codFee,
-    total: subtotal + shipping + codFee,
+    total: Math.max(subtotal + shipping + codFee - discount, 0),
   };
 }
 

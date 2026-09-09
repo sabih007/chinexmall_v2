@@ -1,34 +1,18 @@
+import { SWATCH, type SwatchName } from "@/data/swatches";
 import { photo } from "@/lib/images";
+import { site } from "@/lib/site";
 import type { Product, VariantOption } from "@/lib/types";
 
 /* -------------------------------------------------------------------------- */
 /*  Seed catalogue                                                            */
 /*                                                                            */
-/*  This file is the only place products live. Components read them through   */
-/*  `src/lib/repository.ts`, so replacing this seed with Supabase / Shopify   */
-/*  / a custom admin API is a drop-in change (spec §42–§43).                  */
+/*  The catalogue the store ships with. Products added or edited in the       */
+/*  dashboard are layered over this by `src/lib/repository.ts`, which never    */
+/*  rewrites this file — so the starting catalogue is always recoverable.      */
+/*  Replacing the seed with Supabase / Shopify is still a drop-in change to    */
+/*  the repository (spec §42–§43).                                            */
 /* -------------------------------------------------------------------------- */
 
-const SWATCH = {
-  white: "#F1F0EC",
-  cream: "#EBE3D5",
-  beige: "#D8CBB8",
-  sand: "#C9B79C",
-  oak: "#C29A6C",
-  walnut: "#7A5334",
-  sage: "#A7B4A0",
-  olive: "#6E7355",
-  terracotta: "#B8724F",
-  grey: "#9B9B96",
-  navy: "#2C3A4F",
-  charcoal: "#3A3A38",
-  black: "#1B1B1B",
-  blush: "#E4C7C0",
-  clear: "#E8EDF0",
-  steel: "#B7BDC2",
-} as const;
-
-type SwatchName = keyof typeof SWATCH;
 
 function colorOption(names: SwatchName[], imageAware = false): VariantOption {
   return {
@@ -1180,8 +1164,7 @@ function daysAgo(days: number) {
   return d.toISOString();
 }
 
-const DEFAULT_SHIPPING =
-  "Dispatched within 24–48 hours. Nationwide delivery in 2–5 working days, with free delivery once your order passes the threshold shown in your cart.";
+const DEFAULT_SHIPPING = site.shippingBlurb;
 
 function build(s: Seed, index: number): Product {
   const flags = new Set(s.flags ?? []);
@@ -1218,6 +1201,9 @@ function build(s: Seed, index: number): Product {
     ],
     colorFacet: s.color,
     productType: s.type,
+    /* The starting catalogue ships untagged — tags are created and applied
+       from the dashboard. */
+    tags: [],
     rating: s.rating ?? 4.5,
     reviewCount: s.reviews ?? 20,
     createdAt: daysAgo(s.age ?? 60),

@@ -6,7 +6,12 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { formatPrice } from "@/lib/format";
 import { deliveryMethod } from "@/lib/orders";
-import type { DeliveryMethodId, OrderTotals } from "@/lib/types";
+import type {
+  AppliedCoupon,
+  Coupon,
+  DeliveryMethodId,
+  OrderTotals,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /** The shape both a live cart line and a placed order line collapse to. */
@@ -30,12 +35,19 @@ export function OrderSummary({
   lines,
   totals,
   delivery,
+  coupon,
+  couponField,
   linkProducts = true,
   children,
 }: {
   lines: SummaryLine[];
   totals: OrderTotals;
   delivery: DeliveryMethodId;
+  /** Labels the discount row: a live coupon at checkout, or the one recorded
+   *  on a placed order. */
+  coupon?: Coupon | AppliedCoupon | null;
+  /** The "Have a coupon?" row. Absent on the confirmation page. */
+  couponField?: ReactNode;
   /** Off on the confirmation page, where the order is already placed. */
   linkProducts?: boolean;
   children?: ReactNode;
@@ -108,6 +120,8 @@ export function OrderSummary({
           ))}
         </ul>
 
+        {couponField}
+
         <dl className="space-y-3 border-t border-line px-5 py-5 text-[13.5px] sm:px-6">
           <Row label="Subtotal" value={formatPrice(totals.subtotal)} />
           {totals.savings > 0 && (
@@ -121,6 +135,13 @@ export function OrderSummary({
             label={deliveryMethod(delivery).label}
             value={totals.delivery === 0 ? "Free" : formatPrice(totals.delivery)}
           />
+          {totals.discount > 0 && (
+            <Row
+              label={coupon ? `Coupon ${coupon.code}` : "Coupon"}
+              value={`−${formatPrice(totals.discount)}`}
+              accent
+            />
+          )}
           {totals.codFee > 0 && (
             <Row label="Cash handling" value={formatPrice(totals.codFee)} />
           )}

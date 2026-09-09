@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { resolveVariant } from "@/lib/cart";
+import { recordRedemption } from "@/lib/admin/coupons-store";
+import { applyCoupon, couponProblem, normaliseCouponCode } from "@/lib/coupons";
 import {
+  deliveryFee,
   deliveryMethod,
   generateOrderNumber,
   isDeliveryMethodId,
@@ -11,27 +13,31 @@ import {
   emptyCustomer,
   type CustomerErrors,
 } from "@/lib/orders";
-import { getProductById } from "@/lib/repository";
+import { priceBasket, readBasketItems } from "@/lib/pricing";
+import { getCouponByCode } from "@/lib/repository";
 import type {
+  AppliedCoupon,
   CheckoutRequest,
+  Coupon,
   CustomerDetails,
   Order,
-  OrderLine,
 } from "@/lib/types";
 
 /**
  * Order placement seam.
  *
  * Validates the customer, re-prices the basket from the catalogue — the client
- * never gets to name its own price — and returns the placed order. Wire the
- * marked section to your order system; the checkout UI needs no changes.
+ * never gets to name its own price — re-checks any coupon, and returns the
+ * placed order. Wire the marked section to your order system; the checkout UI
+ * needs no changes.
  */
-
-const MAX_LINES = 50;
 
 interface Failure {
   message: string;
   fields?: CustomerErrors;
+  /** Set when the basket was fine but the coupon was not, so the checkout can
+   *  drop the code and let the customer carry on. */
+  coupon?: "rejected";
 }
 
 function fail(body: Failure, status = 400) {
@@ -70,51 +76,52 @@ export async function POST(request: Request) {
   }
 
   /* ---- basket ---- */
-  const items = Array.isArray(payload.items) ? payload.items : [];
-  if (items.length === 0) return fail({ message: "Your cart is empty." });
-  if (items.length > MAX_LINES) return fail({ message: "That is too many items for one order." });
+  const basket = await priceBasket(readBasketItems(payload.items));
+  if (!basket.ok) return fail({ message: basket.message });
 
-  const lines: OrderLine[] = [];
-  for (const item of items) {
-    const product =
-      typeof item?.productId === "string"
-        ? await getProductById(item.productId)
-        : null;
-    if (!product) {
-      return fail({ message: "One of these products is no longer available." });
-    }
+  const lines = basket.lines;
+  const subtotal = lines.reduce((n, l) => n + l.lineTotal, 0);
 
-    const quantity = Math.floor(Number(item.quantity));
-    if (!Number.isFinite(quantity) || quantity < 1) {
-      return fail({ message: `Choose a quantity for ${product.name}.` });
-    }
-    if (product.stock < 1) {
-      return fail({ message: `${product.name} has just sold out.` });
-    }
-    if (quantity > product.stock) {
+  /* ---- coupon ----
+     Re-checked from the store rather than trusted from the request: the code
+     may have expired, been paused or run out while the customer was filling in
+     the form. */
+  let coupon: Coupon | null = null;
+  let applied: AppliedCoupon | undefined;
+
+  const code = normaliseCouponCode(
+    typeof payload.couponCode === "string" ? payload.couponCode : "",
+  );
+
+  if (code) {
+    coupon = await getCouponByCode(code);
+    if (!coupon) {
       return fail({
-        message: `Only ${product.stock} left of ${product.name}. Please lower the quantity.`,
+        message: "That coupon code was not recognised.",
+        coupon: "rejected",
       });
     }
 
-    const selections =
-      item.selections && typeof item.selections === "object"
-        ? (item.selections as Record<string, string>)
-        : {};
-    const { unitPrice, compareAtPrice, imageIndex, variantLabel } =
-      resolveVariant(product, selections);
+    const problem = couponProblem(coupon, {
+      subtotal,
+      deliveryFee: deliveryFee(delivery, subtotal),
+    });
+    if (problem) {
+      return fail({ message: problem, coupon: "rejected" });
+    }
 
-    lines.push({
-      productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      image: product.images[imageIndex] ?? product.thumbnail,
-      variantLabel,
-      selections,
-      quantity,
-      unitPrice,
-      compareAtPrice,
-      lineTotal: unitPrice * quantity,
+    /* Counting the redemption before the order is built closes the race where
+       two customers spend the last use of a limited code at the same moment. */
+    if (!(await recordRedemption(coupon.id))) {
+      return fail({
+        message: "That coupon has just reached its limit.",
+        coupon: "rejected",
+      });
+    }
+
+    applied = applyCoupon(coupon, {
+      subtotal,
+      deliveryFee: deliveryFee(delivery, subtotal),
     });
   }
 
@@ -126,7 +133,8 @@ export async function POST(request: Request) {
     delivery,
     payment,
     lines,
-    totals: orderTotals(lines, delivery, payment),
+    totals: orderTotals(lines, delivery, payment, coupon),
+    ...(applied ? { coupon: applied } : {}),
     eta: deliveryMethod(delivery).eta,
   };
 

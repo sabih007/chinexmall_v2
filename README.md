@@ -17,21 +17,33 @@ npm run lint
 
 ```
 src/
+├── proxy.ts                      Keeps signed-out visitors off /admin
 ├── app/
-│   ├── page.tsx                  Homepage (spec §11 running order)
-│   ├── shop/                     Shop all + search results
-│   ├── collections/[slug]/       Category pages
-│   ├── product/[slug]/           Product detail (prerendered per product)
-│   ├── new-arrivals/ best-sellers/ deals/
-│   ├── cart/ wishlist/ account/
-│   ├── checkout/                 Address, delivery and payment (COD · bank transfer)
-│   ├── order/[number]/           Order confirmation
-│   ├── faq/ our-story/ contact/ policies/[slug]/
-│   ├── api/                      search · recommendations · newsletter · orders
+│   ├── layout.tsx                Document shell only — fonts, metadata, JSON-LD
+│   ├── (storefront)/             Everything a shopper sees (adds no URL segment)
+│   │   ├── page.tsx              Homepage (spec §11 running order)
+│   │   ├── shop/                 Shop all + search results
+│   │   ├── collections/[slug]/   Category pages
+│   │   ├── product/[slug]/       Product detail (prerendered per product)
+│   │   ├── new-arrivals/ best-sellers/ deals/
+│   │   ├── cart/ wishlist/ account/
+│   │   ├── checkout/             Address, delivery and payment (COD · bank transfer)
+│   │   ├── order/[number]/       Order confirmation
+│   │   └── faq/ our-story/ contact/ policies/[slug]/
+│   ├── admin/                    Store dashboard — login, overview, products,
+│   │   │                         coupons
+│   │   ├── actions.ts            Server Actions: sign in, save, delete, restore
+│   │   ├── login/
+│   │   └── (dashboard)/          Signed-in pages, behind the sidebar chrome
+│   ├── api/                      search · recommendations · newsletter ·
+│   │                             orders · coupons
 │   ├── sitemap.ts robots.ts not-found.tsx
 │
 ├── components/
-│   ├── layout/                   AnnouncementBar · Header · MobileNav · BottomNav · Footer
+│   ├── admin/                    AdminNav · Fields · ProductForm ·
+│   │                             ImageManager · CouponForm
+│   ├── layout/                   AnnouncementBar · Header · MobileNav · BottomNav ·
+│   │                             Footer · StorefrontShell
 │   ├── home/                     Hero · CategoryGrid · ProductSections · PromoBanner ·
 │   │                             WhyShop · ImportStory · ShopTheLook · LookBoard ·
 │   │                             Reviews · SocialSection · Newsletter
@@ -39,16 +51,22 @@ src/
 │   │                             ProductDetail · ProductVariants · RelatedProducts
 │   ├── collections/              CollectionHero · CollectionView · CollectionFilters
 │   ├── cart/                     CartDrawer (+ CartItem, QuantityStepper, recommendations)
-│   ├── checkout/                 Fields (form primitives) · OrderSummary
+│   ├── checkout/                 Fields (form primitives) · OrderSummary ·
+│   │                             CouponField
 │   ├── search/                   SearchOverlay
 │   ├── ui/                       Button · Badge · Drawer · Accordion · Primitives
 │   ├── common/                   Reveal · Breadcrumbs · WhatsAppFloat
 │   └── providers/                StoreProvider (cart + wishlist + overlay state)
 │
-├── data/                         products.ts · categories.ts · reviews.ts · looks.ts
+├── data/                         products.ts · categories.ts · reviews.ts ·
+│                                 looks.ts · swatches.ts
 └── lib/                          repository.ts · types.ts · site.ts · format.ts ·
-                                  cart.ts · orders.ts · images.ts · whatsapp.ts ·
-                                  utils.ts
+    │                             cart.ts · orders.ts · coupons.ts · pricing.ts ·
+    │                             images.ts · whatsapp.ts · utils.ts
+    └── admin/                    auth.ts · session.ts · json-store.ts ·
+                                  store.ts · coupons-store.ts ·
+                                  product-form.ts · coupon-form.ts ·
+                                  uploads.ts · form-state.ts
 ```
 
 ---
@@ -66,9 +84,10 @@ src/
 | Bank transfer account details | `src/lib/site.ts` → `bankAccount` |
 | Navigation and footer links | `src/lib/site.ts` |
 | Colours, fonts, radii | `src/app/globals.css` (`@theme` block) |
-| Products | `src/data/products.ts` |
+| Products | The `/admin` dashboard, or `src/data/products.ts` for the seed |
 | Categories | `src/data/categories.ts` |
 | Canonical domain | `NEXT_PUBLIC_SITE_URL` env var |
+| Dashboard password | `ADMIN_PASSWORD` env var — see [The dashboard](#the-dashboard) |
 
 ### Placeholder content to replace before launch
 
@@ -80,14 +99,110 @@ src/
   the homepage. Set `PLACEHOLDER_REVIEWS = false` once real reviews exist and
   the notice disappears.
 - **Delivery times and return window.** Currently 2–5 working days and 7 days.
-  Used in `src/app/faq/page.tsx`, `src/app/policies/[slug]/page.tsx` and
-  `DEFAULT_SHIPPING` in `src/data/products.ts`.
+  Used in `src/app/(storefront)/faq/page.tsx`,
+  `src/app/(storefront)/policies/[slug]/page.tsx` and
+  `site.shippingBlurb` in `src/lib/site.ts`.
 - **Policy copy.** Starter text, not legal advice — have it reviewed.
 - **Bank account details.** `bankAccount` in `src/lib/site.ts` is dummy data
   and is shown to anyone who picks bank transfer at checkout. Replace it, or
   drop that entry from `paymentMethods` to offer cash on delivery only.
 - **Delivery rates.** `deliveryMethods` currently quotes Rs. 250 standard and
   Rs. 450 express — set these to what your courier actually charges.
+
+---
+
+## The dashboard
+
+`/admin` is a small back office: add a product, edit or remove one, see what
+needs restocking, and issue coupon codes. Anything saved is live on the
+storefront immediately.
+
+### Setting it up
+
+One environment variable is all it needs. Copy `.env.example` to `.env.local`
+and set a password:
+
+```
+ADMIN_PASSWORD=choose-something-long
+```
+
+Restart the dev server, then open [`/admin`](http://localhost:3000/admin).
+There is a single operator account; the password signs you in for seven days
+via an HTTP-only, signed cookie. Set `ADMIN_SESSION_SECRET` as well if you want
+to change the password without signing everyone out.
+
+Without `ADMIN_PASSWORD` the login page says so and refuses every attempt —
+it never falls back to a default password.
+
+### Where the data goes
+
+| What | Where | Notes |
+| --- | --- | --- |
+| Products added or edited | `data/catalogue.json` | Created on first save |
+| Coupons and their redemption counts | `data/coupons.json` | Created on first save |
+| Uploaded photos | `public/uploads/` | Served straight off the origin |
+
+The seed catalogue in `src/data/products.ts` is never rewritten. The dashboard
+keeps an **overlay** — edited products shadow the seed, removed ones are
+tombstoned, new ones are appended — and `src/lib/repository.ts` merges the two
+on every read. So an edit is always reversible, and a removed starter product
+can be restored from the bottom of the products list.
+
+Both paths are ordinary files, which means:
+
+- They must live on a **persistent disk**. On a normal Node host (a VPS,
+  Docker with a volume, Railway, Render) this works as-is. On a read-only
+  serverless filesystem such as Vercel, writes will not survive — point
+  `saveProduct` in `src/lib/admin/store.ts` at a database and
+  `saveUploadedImages` in `src/lib/admin/uploads.ts` at object storage. Both
+  return the same shapes, so no page or component changes.
+- They are **your content**, so they are not git-ignored. Commit them if you
+  deploy by pushing, and include them in whatever you back up.
+
+### Coupons
+
+`/admin/coupons` issues codes customers redeem at checkout. Three kinds:
+
+| Type | Takes off |
+| --- | --- |
+| Percentage off | A share of the subtotal, optionally capped in rupees |
+| Fixed amount off | A flat sum, never more than the basket is worth |
+| Free delivery | The shipping fee for that order |
+
+Each code can carry a minimum spend, a start and end date, and a total number
+of uses. **Active** can be switched off to refuse a seasonal code without
+deleting it and losing its history. "Generate" invents a code from an alphabet
+with no ambiguous characters, so it survives being read down a phone line.
+
+Customers enter the code in the order summary at checkout. The rules live in
+`src/lib/coupons.ts` and run in three places against the same functions: the
+checkout prices the basket as the customer changes delivery method,
+`/api/coupons` re-prices from the catalogue when a code is applied, and
+`/api/orders` checks it once more before charging — so a code that expires or
+runs out mid-checkout is refused rather than honoured. The redemption count is
+incremented inside the store's lock, which is what stops two simultaneous
+orders both spending the last use of a single-use code.
+
+The free-delivery threshold is judged on the subtotal *before* any coupon, so a
+discount can never push a basket back under it partway through checkout.
+
+### Photo addresses
+
+`next/image` only loads remote images from the hosts listed in
+`images.remotePatterns` in `next.config.ts`. The form enforces the same list,
+so a pasted URL from anywhere else is rejected with an explanation rather than
+rendering as a broken image later. Uploaded files are site-relative and always
+allowed.
+
+### Security notes
+
+- `src/proxy.ts` redirects signed-out visitors away from `/admin`, but that is
+  only a convenience. Server Actions are reachable by direct POST, so every
+  action and the dashboard layout call `requireAdmin()` themselves.
+- `/admin` is excluded from `robots.txt` and every dashboard page is
+  `noindex`.
+- Put the site behind HTTPS in production — the session cookie is only marked
+  `secure` when `NODE_ENV=production`.
 
 ---
 
@@ -99,6 +214,7 @@ Supabase, the Shopify Storefront API or a custom admin backend, reimplement
 that one file against the same signatures — pages and components do not change.
 
 ```ts
+getCatalogue()              // seed + dashboard overlay, the source for the rest
 getProducts(query)          // filter / sort / paginate, returns { items, total }
 getProductBySlug(slug)
 getAllProductSlugs()        // drives generateStaticParams
@@ -106,6 +222,7 @@ getRelatedProducts(product)
 getRecommendations(exclude) // cart drawer cross-sell
 getCategories() / getCategoryBySlug() / getCategoryCounts()
 getFacets(scope)            // filter panel values + counts
+getCoupons() / getCouponByCode(code)
 getReviews() / getReviewsForProduct()
 getLooks() / getLookProducts() / getSocialPosts()
 ```
@@ -124,7 +241,8 @@ Other integration seams:
   (cash on delivery, bank transfer) need no gateway.
 - **Newsletter** — `src/app/api/newsletter/route.ts` validates and
   acknowledges; forward the address to your provider at the marked `TODO`.
-- **Accounts** — `src/app/account/page.tsx` is a placeholder.
+- **Accounts** — `src/app/(storefront)/account/page.tsx` is a placeholder. The
+  dashboard has its own single-operator sign-in and shares nothing with it.
 - **Cart persistence** — `StoreProvider` writes to `localStorage`; swap that
   for a cart API and the hooks stay the same.
 

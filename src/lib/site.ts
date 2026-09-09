@@ -29,6 +29,9 @@ export const site = {
   phone: "+92 300 123 4567",
   address: "Main Boulevard, Gulberg III, Lahore, Pakistan",
   hours: "Mon – Sat, 10:00 – 19:00",
+  /** Default shipping copy on a product page, unless a product overrides it. */
+  shippingBlurb:
+    "Dispatched within 24–48 hours. Nationwide delivery in 2–5 working days, with free delivery once your order passes the threshold shown in your cart.",
 } as const;
 
 /** Rotating announcement bar (spec §08). Add or remove freely. */

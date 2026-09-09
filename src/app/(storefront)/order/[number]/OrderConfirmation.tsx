@@ -3,7 +3,7 @@
 import { Check, MessageCircle, Package, Truck } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useSyncExternalStore, type ReactNode } from "react";
-import { orderKey } from "@/app/checkout/CheckoutClient";
+import { orderKey } from "@/app/(storefront)/checkout/CheckoutClient";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { ButtonLink } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Primitives";
@@ -83,6 +83,7 @@ export function OrderConfirmation({ number }: { number: string }) {
           }))}
           totals={order.totals}
           delivery={order.delivery}
+          coupon={order.coupon}
           linkProducts={false}
         />
       </aside>

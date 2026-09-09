@@ -1,14 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
-import { CartDrawer } from "@/components/cart/CartDrawer";
-import { WhatsAppFloat } from "@/components/common/WhatsAppFloat";
-import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
-import { BottomNav } from "@/components/layout/BottomNav";
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
-import { MobileNav } from "@/components/layout/MobileNav";
-import { StoreProvider } from "@/components/providers/StoreProvider";
-import { SearchOverlay } from "@/components/search/SearchOverlay";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -95,27 +86,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organisationLd) }}
         />
 
-        <StoreProvider>
-          <a
-            href="#main"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:bg-ink focus:px-4 focus:py-2 focus:text-xs focus:uppercase focus:tracking-widest focus:text-paper"
-          >
-            Skip to content
-          </a>
-
-          <AnnouncementBar />
-          <Header />
-
-          <main id="main">{children}</main>
-
-          <Footer />
-
-          <MobileNav />
-          <CartDrawer />
-          <SearchOverlay />
-          <BottomNav />
-          <WhatsAppFloat />
-        </StoreProvider>
+        {children}
       </body>
     </html>
   );

@@ -12,10 +12,12 @@ import {
   TextArea,
   TextInput,
 } from "@/components/checkout/Fields";
+import { CouponField } from "@/components/checkout/CouponField";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { useStore } from "@/components/providers/StoreProvider";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Primitives";
+import { couponProblem } from "@/lib/coupons";
 import { formatPrice, freeShippingProgress } from "@/lib/format";
 import {
   bankAccount,
@@ -32,6 +34,7 @@ import {
 import { site } from "@/lib/site";
 import type {
   CartLine,
+  Coupon,
   CustomerDetails,
   DeliveryMethodId,
   Order,
@@ -97,6 +100,7 @@ function CheckoutForm({
   const [customer, setCustomer] = useState<CustomerDetails>(savedCustomer);
   const [delivery, setDelivery] = useState<DeliveryMethodId>("standard");
   const [payment, setPayment] = useState<PaymentMethodId>("cod");
+  const [coupon, setCoupon] = useState<Coupon | null>(null);
   const [errors, setErrors] = useState<CustomerErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -104,8 +108,19 @@ function CheckoutForm({
   /* Re-validate on every keystroke only after a first failed submit. */
   const validateLive = useRef(false);
 
-  const totals = orderTotals(lines, delivery, payment);
+  const totals = orderTotals(lines, delivery, payment, coupon);
   const shipping = freeShippingProgress(totals.subtotal);
+
+  /* An applied coupon can stop qualifying — the basket shrinks below its
+     minimum, or the customer switches to a delivery method that is already
+     free. `orderTotals` has already dropped the discount; this is what tells
+     the customer why. */
+  const couponIssue = coupon
+    ? couponProblem(coupon, {
+        subtotal: totals.subtotal,
+        deliveryFee: totals.delivery,
+      })
+    : null;
 
   function update(field: CustomerField, value: string) {
     const next = { ...customer, [field]: value };
@@ -151,6 +166,7 @@ function CheckoutForm({
           customer,
           delivery,
           payment,
+          ...(coupon && !couponIssue ? { couponCode: coupon.code } : {}),
           items: lines.map((l) => ({
             productId: l.productId,
             quantity: l.quantity,
@@ -163,6 +179,7 @@ function CheckoutForm({
         order?: Order;
         message?: string;
         fields?: CustomerErrors;
+        coupon?: "rejected";
       };
 
       if (!response.ok || !data.order) {
@@ -170,6 +187,9 @@ function CheckoutForm({
           setErrors(data.fields);
           focusFirstError(data.fields);
         }
+        // The code went stale between applying it and pressing place order:
+        // drop it so the next attempt goes through at the undiscounted total.
+        if (data.coupon === "rejected") setCoupon(null);
         setFormError(
           data.message ?? "We could not place that order. Please try again.",
         );
@@ -218,6 +238,19 @@ function CheckoutForm({
           lines={summaryLines(lines)}
           totals={totals}
           delivery={delivery}
+          coupon={coupon}
+          couponField={
+            <CouponField
+              lines={lines}
+              delivery={delivery}
+              payment={payment}
+              coupon={coupon}
+              problem={couponIssue}
+              discount={totals.discount}
+              onApply={setCoupon}
+              onRemove={() => setCoupon(null)}
+            />
+          }
         />
 
         {delivery === "standard" && !shipping.qualified && (

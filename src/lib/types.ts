@@ -61,9 +61,32 @@ export interface Product {
   /** Facet used by the shop filters. */
   colorFacet: string;
   productType: string;
+  /** Tag slugs — see `Tag`. Shoppers filter by these; the dashboard owns the
+   *  vocabulary, so a product can only carry tags that exist. */
+  tags: string[];
   rating: number;
   reviewCount: number;
   createdAt: string;
+}
+
+/**
+ * A free-form label on a product — "gift idea", "under 2000", "ramadan".
+ *
+ * Categories are structural and a product has exactly one; tags are editorial
+ * and a product can have any number.
+ */
+export interface Tag {
+  id: string;
+  name: string;
+  /** What appears in `Product.tags` and in `/shop?tag=…`. */
+  slug: string;
+  createdAt: string;
+}
+
+/** A named colour in the store's palette, used for swatches and the filter. */
+export interface Swatch {
+  name: string;
+  hex: string;
 }
 
 export interface Category {
@@ -132,6 +155,7 @@ export type SortKey =
 
 export interface ProductQuery {
   categories?: string[];
+  tags?: string[];
   productTypes?: string[];
   brands?: string[];
   colors?: string[];
@@ -165,10 +189,50 @@ export interface FacetValue {
 
 export interface Facets {
   categories: FacetValue[];
+  tags: FacetValue[];
   productTypes: FacetValue[];
   brands: FacetValue[];
   colors: FacetValue[];
   priceRange: { min: number; max: number };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Coupons                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export type CouponType = "percentage" | "fixed" | "free-shipping";
+
+export interface Coupon {
+  id: string;
+  /** Uppercase, no spaces — exactly what the customer types in. */
+  code: string;
+  /** Shown in the dashboard and to the customer once the coupon applies. */
+  description: string;
+  type: CouponType;
+  /** Percent off, or rupees off. Ignored for `free-shipping`. */
+  value: number;
+  /** Subtotal the basket must reach. `0` means no minimum. */
+  minSubtotal: number;
+  /** Caps a percentage discount, in rupees. */
+  maxDiscount?: number;
+  /** ISO dates. Absent means "from now" / "no end". */
+  startsAt?: string;
+  expiresAt?: string;
+  /** Total redemptions allowed across all customers. */
+  usageLimit?: number;
+  usedCount: number;
+  /** Off keeps the code alive but refuses it — no need to delete a seasonal code. */
+  active: boolean;
+  createdAt: string;
+}
+
+/** A coupon as it was applied to one basket, with the discount resolved. */
+export interface AppliedCoupon {
+  code: string;
+  description: string;
+  type: CouponType;
+  /** Rupees taken off this order. */
+  amount: number;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -212,6 +276,8 @@ export interface OrderTotals {
   subtotal: number;
   savings: number;
   delivery: number;
+  /** Taken off by a coupon. Zero when none was applied. */
+  discount: number;
   /** Cash-handling charge, if the business levies one. */
   codFee: number;
   total: number;
@@ -234,6 +300,8 @@ export interface Order {
   payment: PaymentMethodId;
   lines: OrderLine[];
   totals: OrderTotals;
+  /** The coupon the customer redeemed, if any. */
+  coupon?: AppliedCoupon;
   /** Delivery window quoted at checkout, e.g. "2–5 working days". */
   eta: string;
 }
@@ -248,6 +316,8 @@ export interface CheckoutRequest {
   customer: CustomerDetails;
   delivery: DeliveryMethodId;
   payment: PaymentMethodId;
+  /** Re-checked against the coupon store before it is honoured. */
+  couponCode?: string;
   items: {
     productId: string;
     quantity: number;

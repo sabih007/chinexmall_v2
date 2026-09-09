@@ -1,13 +1,19 @@
 import "server-only";
 
-import { categories } from "@/data/categories";
+import { categories as seedCategories } from "@/data/categories";
 import { looks, socialPosts } from "@/data/looks";
-import { colorSwatches, products } from "@/data/products";
+import { products as seedProducts } from "@/data/products";
+import { SWATCH } from "@/data/swatches";
 import { PLACEHOLDER_REVIEWS, reviews } from "@/data/reviews";
+import { findCouponByCode, listCoupons } from "./admin/coupons-store";
+import { readOverlay } from "./admin/store";
+import { readTaxonomy } from "./admin/taxonomy-store";
 import { discountPercent } from "./format";
 import type {
   Category,
+  Coupon,
   Facets,
+  Tag,
   Look,
   Product,
   ProductPage,
@@ -40,6 +46,8 @@ const SORTERS: Record<SortKey, (a: Product, b: Product) => number> = {
 function matches(product: Product, q: ProductQuery): boolean {
   if (q.excludeSlug && product.slug === q.excludeSlug) return false;
   if (q.categories?.length && !q.categories.includes(product.category))
+    return false;
+  if (q.tags?.length && !q.tags.some((tag) => product.tags.includes(tag)))
     return false;
   if (q.productTypes?.length && !q.productTypes.includes(product.productType))
     return false;
@@ -77,8 +85,46 @@ function matches(product: Product, q: ProductQuery): boolean {
   return true;
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Effective catalogue                                                       */
+/* -------------------------------------------------------------------------- */
+
+const seedIds = new Set(seedProducts.map((p) => p.id));
+
+export function isSeedProduct(id: string): boolean {
+  return seedIds.has(id);
+}
+
+/**
+ * The seed catalogue with the dashboard's overlay applied: edited seed
+ * products are shadowed, removed ones dropped, and dashboard-authored products
+ * appended. Every read below goes through this, so a product saved in the
+ * admin is live on the storefront as soon as its routes revalidate.
+ */
+export async function getCatalogue(): Promise<Product[]> {
+  const overlay = await readOverlay();
+
+  const base = seedProducts
+    .filter((p) => !overlay.deleted.includes(p.id))
+    .map((p) => overlay.products[p.id] ?? p);
+
+  const authored = Object.values(overlay.products).filter(
+    (p) => !seedIds.has(p.id),
+  );
+
+  return [...authored, ...base];
+}
+
+/** Seed products the operator has removed — the dashboard offers them back. */
+export async function getRemovedSeedProducts(): Promise<Product[]> {
+  const { deleted } = await readOverlay();
+  return seedProducts.filter((p) => deleted.includes(p.id));
+}
+
+/* -------------------------------------------------------------------------- */
+
 export async function getProducts(q: ProductQuery = {}): Promise<ProductPage> {
-  const filtered = products.filter((p) => matches(p, q));
+  const filtered = (await getCatalogue()).filter((p) => matches(p, q));
   const sorted = [...filtered].sort(SORTERS[q.sort ?? "featured"]);
   const offset = q.offset ?? 0;
   const items = q.limit != null ? sorted.slice(offset, offset + q.limit) : sorted.slice(offset);
@@ -86,25 +132,26 @@ export async function getProducts(q: ProductQuery = {}): Promise<ProductPage> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  return products.find((p) => p.slug === slug) ?? null;
+  return (await getCatalogue()).find((p) => p.slug === slug) ?? null;
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  return products.find((p) => p.id === id) ?? null;
+  return (await getCatalogue()).find((p) => p.id === id) ?? null;
 }
 
 export async function getAllProductSlugs(): Promise<string[]> {
-  return products.map((p) => p.slug);
+  return (await getCatalogue()).map((p) => p.slug);
 }
 
 export async function getRelatedProducts(
   product: Product,
   limit = 4,
 ): Promise<Product[]> {
-  const sameCategory = products.filter(
+  const all = await getCatalogue();
+  const sameCategory = all.filter(
     (p) => p.category === product.category && p.slug !== product.slug,
   );
-  const fallback = products.filter(
+  const fallback = all.filter(
     (p) => p.category !== product.category && p.slug !== product.slug,
   );
   return [...sameCategory, ...fallback].slice(0, limit);
@@ -115,29 +162,87 @@ export async function getRecommendations(
   excludeSlugs: string[] = [],
   limit = 4,
 ): Promise<Product[]> {
-  const pool = products.filter((p) => !excludeSlugs.includes(p.slug));
+  const pool = (await getCatalogue()).filter(
+    (p) => !excludeSlugs.includes(p.slug),
+  );
   return [...pool]
     .sort((a, b) => Number(b.bestSeller) - Number(a.bestSeller) || b.rating - a.rating)
     .slice(0, limit);
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Taxonomy                                                                  */
+/* -------------------------------------------------------------------------- */
+
+const seedCategoryIds = new Set(seedCategories.map((c) => c.id));
+
+export function isSeedCategory(id: string): boolean {
+  return seedCategoryIds.has(id);
+}
+
+/** The seed categories with the dashboard's overlay applied, in display order. */
 export async function getCategories(options?: {
   featuredOnly?: boolean;
 }): Promise<Category[]> {
-  const list = options?.featuredOnly
-    ? categories.filter((c) => c.featured)
-    : categories;
-  return [...list].sort((a, b) => a.order - b.order);
+  const taxonomy = await readTaxonomy();
+
+  const base = seedCategories
+    .filter((c) => !taxonomy.deletedCategories.includes(c.id))
+    .map((c) => taxonomy.categories[c.id] ?? c);
+
+  const authored = Object.values(taxonomy.categories).filter(
+    (c) => !seedCategoryIds.has(c.id),
+  );
+
+  const all = [...base, ...authored];
+  const list = options?.featuredOnly ? all.filter((c) => c.featured) : all;
+
+  return list.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
 }
 
 export async function getCategoryBySlug(
   slug: string,
 ): Promise<Category | null> {
-  return categories.find((c) => c.slug === slug) ?? null;
+  return (await getCategories()).find((c) => c.slug === slug) ?? null;
+}
+
+/** Seed categories the operator has hidden — the dashboard offers them back. */
+export async function getRemovedSeedCategories(): Promise<Category[]> {
+  const { deletedCategories } = await readTaxonomy();
+  return seedCategories.filter((c) => deletedCategories.includes(c.id));
+}
+
+/** The colour palette: seed swatches, minus removals, plus the operator's own. */
+export async function getSwatches(): Promise<Record<string, string>> {
+  const { swatches, deletedSwatches } = await readTaxonomy();
+
+  const palette: Record<string, string> = {};
+  for (const [name, hex] of Object.entries(SWATCH)) {
+    if (!deletedSwatches.includes(name)) palette[name] = hex;
+  }
+  return { ...palette, ...swatches };
+}
+
+export function isSeedSwatch(name: string): boolean {
+  return name in SWATCH;
+}
+
+export async function getRemovedSeedSwatches(): Promise<
+  { name: string; hex: string }[]
+> {
+  const { deletedSwatches } = await readTaxonomy();
+  return Object.entries(SWATCH)
+    .filter(([name]) => deletedSwatches.includes(name))
+    .map(([name, hex]) => ({ name, hex }));
+}
+
+export async function getTags(): Promise<Tag[]> {
+  const { tags } = await readTaxonomy();
+  return Object.values(tags).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getCategoryCounts(): Promise<Record<string, number>> {
-  return products.reduce<Record<string, number>>((acc, p) => {
+  return (await getCatalogue()).reduce<Record<string, number>>((acc, p) => {
     acc[p.category] = (acc[p.category] ?? 0) + 1;
     return acc;
   }, {});
@@ -147,9 +252,10 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
 export async function getFacets(scope?: {
   category?: string;
 }): Promise<Facets> {
+  const all = await getCatalogue();
   const pool = scope?.category
-    ? products.filter((p) => p.category === scope.category)
-    : products;
+    ? all.filter((p) => p.category === scope.category)
+    : all;
 
   const tally = (values: string[]) =>
     values.reduce<Record<string, number>>((acc, v) => {
@@ -157,7 +263,14 @@ export async function getFacets(scope?: {
       return acc;
     }, {});
 
+  const [categories, tags, swatches] = await Promise.all([
+    getCategories(),
+    getTags(),
+    getSwatches(),
+  ]);
+
   const categoryTally = tally(pool.map((p) => p.category));
+  const tagTally = tally(pool.flatMap((p) => p.tags));
   const typeTally = tally(pool.map((p) => p.productType));
   const brandTally = tally(pool.map((p) => p.brand));
   const colorTally = tally(pool.map((p) => p.colorFacet));
@@ -172,6 +285,13 @@ export async function getFacets(scope?: {
         count,
       }))
       .sort((a, b) => a.label.localeCompare(b.label)),
+    tags: Object.entries(tagTally)
+      .map(([value, count]) => ({
+        value,
+        label: tags.find((t) => t.slug === value)?.name ?? value,
+        count,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
     productTypes: Object.entries(typeTally)
       .map(([value, count]) => ({ value, label: value, count }))
       .sort((a, b) => a.label.localeCompare(b.label)),
@@ -183,7 +303,7 @@ export async function getFacets(scope?: {
         value,
         label: value[0].toUpperCase() + value.slice(1),
         count,
-        hex: colorSwatches[value],
+        hex: swatches[value],
       }))
       .sort((a, b) => a.label.localeCompare(b.label)),
     priceRange: {
@@ -191,6 +311,19 @@ export async function getFacets(scope?: {
       max: prices.length ? Math.max(...prices) : 0,
     },
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Coupons                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export async function getCoupons(): Promise<Coupon[]> {
+  return listCoupons();
+}
+
+/** Looks a code up as the customer typed it — matching is case-insensitive. */
+export async function getCouponByCode(code: string): Promise<Coupon | null> {
+  return findCouponByCode(code);
 }
 
 export async function getReviews(limit?: number): Promise<Review[]> {
@@ -213,9 +346,10 @@ export async function getLooks(): Promise<Look[]> {
 export async function getLookProducts(
   look: Look,
 ): Promise<{ x: number; y: number; product: Product }[]> {
+  const all = await getCatalogue();
   return look.slots
     .map((slot) => {
-      const product = products.find((p) => p.slug === slot.productSlug);
+      const product = all.find((p) => p.slug === slot.productSlug);
       return product ? { x: slot.x, y: slot.y, product } : null;
     })
     .filter((v): v is { x: number; y: number; product: Product } => v !== null);
