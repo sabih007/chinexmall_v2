@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  Database,
   FolderTree,
   LayoutGrid,
   Package,
   PackagePlus,
   Palette,
+  Receipt,
   Tags,
   Ticket,
 } from "lucide-react";
@@ -30,6 +32,12 @@ const groups: { title?: string; links: NavLink[] }[] = [
         label: "Overview",
         icon: LayoutGrid,
         matches: (path) => path === "/admin",
+      },
+      {
+        href: "/admin/orders",
+        label: "Orders",
+        icon: Receipt,
+        matches: (path) => path.startsWith("/admin/orders"),
       },
       {
         href: "/admin/products",
@@ -72,6 +80,17 @@ const groups: { title?: string; links: NavLink[] }[] = [
         label: "Colours",
         icon: Palette,
         matches: (path) => path.startsWith("/admin/colours"),
+      },
+    ],
+  },
+  {
+    title: "Store",
+    links: [
+      {
+        href: "/admin/database",
+        label: "Database",
+        icon: Database,
+        matches: (path) => path.startsWith("/admin/database"),
       },
     ],
   },

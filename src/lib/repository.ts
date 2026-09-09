@@ -6,8 +6,14 @@ import { products as seedProducts } from "@/data/products";
 import { SWATCH } from "@/data/swatches";
 import { PLACEHOLDER_REVIEWS, reviews } from "@/data/reviews";
 import { findCouponByCode, listCoupons } from "./admin/coupons-store";
-import { readOverlay } from "./admin/store";
-import { readTaxonomy } from "./admin/taxonomy-store";
+import { listProducts, listRemovedSeedProducts } from "./admin/store";
+import {
+  listCategories,
+  listRemovedSeedCategories,
+  listRemovedSeedSwatches,
+  listSwatches,
+  listTags,
+} from "./admin/taxonomy-store";
 import { discountPercent } from "./format";
 import type {
   Category,
@@ -96,29 +102,18 @@ export function isSeedProduct(id: string): boolean {
 }
 
 /**
- * The seed catalogue with the dashboard's overlay applied: edited seed
- * products are shadowed, removed ones dropped, and dashboard-authored products
- * appended. Every read below goes through this, so a product saved in the
- * admin is live on the storefront as soon as its routes revalidate.
+ * Every product on the storefront, from whichever store is live: the products
+ * table, or the seed catalogue with the dashboard's overlay applied. Every
+ * read below goes through this, so a product saved in the admin is live on the
+ * storefront as soon as its routes revalidate.
  */
 export async function getCatalogue(): Promise<Product[]> {
-  const overlay = await readOverlay();
-
-  const base = seedProducts
-    .filter((p) => !overlay.deleted.includes(p.id))
-    .map((p) => overlay.products[p.id] ?? p);
-
-  const authored = Object.values(overlay.products).filter(
-    (p) => !seedIds.has(p.id),
-  );
-
-  return [...authored, ...base];
+  return listProducts();
 }
 
 /** Seed products the operator has removed — the dashboard offers them back. */
 export async function getRemovedSeedProducts(): Promise<Product[]> {
-  const { deleted } = await readOverlay();
-  return seedProducts.filter((p) => deleted.includes(p.id));
+  return listRemovedSeedProducts();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -184,17 +179,7 @@ export function isSeedCategory(id: string): boolean {
 export async function getCategories(options?: {
   featuredOnly?: boolean;
 }): Promise<Category[]> {
-  const taxonomy = await readTaxonomy();
-
-  const base = seedCategories
-    .filter((c) => !taxonomy.deletedCategories.includes(c.id))
-    .map((c) => taxonomy.categories[c.id] ?? c);
-
-  const authored = Object.values(taxonomy.categories).filter(
-    (c) => !seedCategoryIds.has(c.id),
-  );
-
-  const all = [...base, ...authored];
+  const all = await listCategories();
   const list = options?.featuredOnly ? all.filter((c) => c.featured) : all;
 
   return list.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
@@ -208,19 +193,12 @@ export async function getCategoryBySlug(
 
 /** Seed categories the operator has hidden — the dashboard offers them back. */
 export async function getRemovedSeedCategories(): Promise<Category[]> {
-  const { deletedCategories } = await readTaxonomy();
-  return seedCategories.filter((c) => deletedCategories.includes(c.id));
+  return listRemovedSeedCategories();
 }
 
-/** The colour palette: seed swatches, minus removals, plus the operator's own. */
+/** The colour palette the shop's facets and the dashboard both read from. */
 export async function getSwatches(): Promise<Record<string, string>> {
-  const { swatches, deletedSwatches } = await readTaxonomy();
-
-  const palette: Record<string, string> = {};
-  for (const [name, hex] of Object.entries(SWATCH)) {
-    if (!deletedSwatches.includes(name)) palette[name] = hex;
-  }
-  return { ...palette, ...swatches };
+  return listSwatches();
 }
 
 export function isSeedSwatch(name: string): boolean {
@@ -230,15 +208,11 @@ export function isSeedSwatch(name: string): boolean {
 export async function getRemovedSeedSwatches(): Promise<
   { name: string; hex: string }[]
 > {
-  const { deletedSwatches } = await readTaxonomy();
-  return Object.entries(SWATCH)
-    .filter(([name]) => deletedSwatches.includes(name))
-    .map(([name, hex]) => ({ name, hex }));
+  return listRemovedSeedSwatches();
 }
 
 export async function getTags(): Promise<Tag[]> {
-  const { tags } = await readTaxonomy();
-  return Object.values(tags).sort((a, b) => a.name.localeCompare(b.name));
+  return (await listTags()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getCategoryCounts(): Promise<Record<string, number>> {

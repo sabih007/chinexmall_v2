@@ -3,12 +3,14 @@ import {
   ArrowUpRight,
   PackagePlus,
   Package,
+  Receipt,
   Tag,
   Ticket,
 } from "lucide-react";
 import Link from "next/link";
-import { readOverlay } from "@/lib/admin/store";
 import { couponStatus } from "@/lib/coupons";
+import { listOrders } from "@/lib/order-store";
+import { statusLabels, statusTones } from "@/lib/order-status";
 import { discountPercent, formatDate, formatPrice } from "@/lib/format";
 import {
   getCatalogue,
@@ -22,12 +24,19 @@ export const metadata = { title: "Overview" };
 
 /** Signed-in landing page: the numbers worth knowing, then the way in. */
 export default async function AdminOverviewPage() {
-  const [products, categories, overlay, coupons] = await Promise.all([
+  const [products, categories, orders, coupons] = await Promise.all([
     getCatalogue(),
     getCategories(),
-    readOverlay(),
+    listOrders(),
     getCoupons(),
   ]);
+
+  const openOrders = orders.filter(
+    (order) => order.status === "pending" || order.status === "confirmed",
+  );
+  const revenue = orders
+    .filter((order) => order.status !== "cancelled")
+    .reduce((sum, order) => sum + order.totals.total, 0);
 
   const outOfStock = products.filter((p) => p.stock <= 0);
   const lowStock = products.filter((p) => p.stock > 0 && p.stock <= 5);
@@ -47,9 +56,9 @@ export default async function AdminOverviewPage() {
         <div>
           <h1 className="display text-[1.5rem]">Overview</h1>
           <p className="mt-1.5 text-[13px] text-muted">
-            {overlay.updatedAt
-              ? `Catalogue last changed ${formatDate(overlay.updatedAt)}.`
-              : "Nothing has been changed from the dashboard yet."}
+            {orders.length === 0
+              ? "No orders yet — the storefront is ready for the first one."
+              : `${orders.length} order${orders.length === 1 ? "" : "s"} · ${formatPrice(revenue)} placed`}
           </p>
         </div>
         <Link
@@ -62,6 +71,13 @@ export default async function AdminOverviewPage() {
       </header>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <Stat
+          label="Orders to handle"
+          value={openOrders.length}
+          icon={Receipt}
+          href="/admin/orders"
+          tone={openOrders.length > 0 ? "warn" : undefined}
+        />
         <Stat label="Products live" value={products.length} icon={Package} />
         <Stat label="Added here" value={authored.length} icon={PackagePlus} />
         <Stat label="On sale" value={onSale.length} icon={Tag} />
@@ -78,6 +94,51 @@ export default async function AdminOverviewPage() {
           tone={outOfStock.length > 0 ? "warn" : undefined}
         />
       </div>
+
+      {orders.length > 0 && (
+        <section className="rounded-tile border border-line bg-paper p-5 shadow-card sm:p-6">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h2 className="text-[15px] font-semibold">Latest orders</h2>
+            <Link
+              href="/admin/orders"
+              className="flex items-center gap-1 text-[12.5px] text-brand hover:underline"
+            >
+              All orders
+              <ArrowUpRight size={13} strokeWidth={1.8} />
+            </Link>
+          </div>
+
+          <ul className="divide-y divide-line">
+            {orders.slice(0, 5).map((order) => (
+              <li
+                key={order.number}
+                className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/admin/orders/${order.number}`}
+                    className="font-mono text-[13px] font-semibold tracking-wide hover:text-brand"
+                  >
+                    {order.number}
+                  </Link>
+                  <p className="truncate text-[12px] text-muted">
+                    {order.customer.firstName} {order.customer.lastName} ·{" "}
+                    {order.customer.city} · {formatDate(order.placedAt)}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusTones[order.status]}`}
+                >
+                  {statusLabels[order.status]}
+                </span>
+                <span className="w-20 shrink-0 text-right text-[13px] font-medium tabular-nums">
+                  {formatPrice(order.totals.total)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {(outOfStock.length > 0 || lowStock.length > 0) && (
         <section className="rounded-tile border border-line bg-paper p-5 shadow-card sm:p-6">

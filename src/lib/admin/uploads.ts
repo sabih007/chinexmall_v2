@@ -3,6 +3,11 @@ import "server-only";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  IMAGE_BUCKET,
+  isSupabaseConfigured,
+  requireSupabase,
+} from "@/lib/supabase/client";
+import {
   ACCEPTED_IMAGE_TYPES,
   MAX_IMAGE_BYTES,
 } from "./product-form";
@@ -10,11 +15,13 @@ import {
 /**
  * Product photo uploads.
  *
- * Files land in `public/uploads`, so they are served straight off the origin
- * and need no `images.remotePatterns` entry. That works on any Node host; on a
- * read-only serverless filesystem, point `saveUploadedImages` at S3, Supabase
- * storage or the Shopify CDN instead — it returns URLs, so nothing else in the
- * dashboard or the storefront changes.
+ * With Supabase configured, photos go to a public Storage bucket and the
+ * dashboard stores the bucket URL — which is what makes uploads survive on a
+ * serverless host, where the filesystem is read-only and wiped each deploy.
+ *
+ * Without it, files land in `public/uploads` and are served straight off the
+ * origin. Either way this returns URLs, so nothing else in the dashboard or the
+ * storefront knows the difference.
  */
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
@@ -60,10 +67,41 @@ export async function saveUploadedImages(files: File[]): Promise<string[]> {
     }
   }
 
+  return isSupabaseConfigured()
+    ? uploadToStorage(usable)
+    : uploadToDisk(usable);
+}
+
+/** Supabase Storage — the path a serverless deployment must take. */
+async function uploadToStorage(files: File[]): Promise<string[]> {
+  const bucket = requireSupabase().storage.from(IMAGE_BUCKET);
+  const urls: string[] = [];
+
+  for (const file of files) {
+    const name = filename(file);
+    const { error } = await bucket.upload(name, file, {
+      contentType: file.type,
+      cacheControl: "31536000",
+      upsert: false,
+    });
+
+    if (error) {
+      throw new UploadError(
+        `${file.name || "That photo"} could not be uploaded: ${error.message}`,
+      );
+    }
+
+    urls.push(bucket.getPublicUrl(name).data.publicUrl);
+  }
+
+  return urls;
+}
+
+async function uploadToDisk(files: File[]): Promise<string[]> {
   await mkdir(UPLOAD_DIR, { recursive: true });
 
   const urls: string[] = [];
-  for (const file of usable) {
+  for (const file of files) {
     const name = filename(file);
     const bytes = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(UPLOAD_DIR, name), bytes);

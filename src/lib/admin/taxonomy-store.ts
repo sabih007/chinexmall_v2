@@ -1,204 +1,93 @@
 import "server-only";
 
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import type { Category, Tag } from "@/lib/types";
-import { createJsonStore } from "./json-store";
+import * as db from "./taxonomy.db";
+import * as file from "./taxonomy.file";
 
 /* -------------------------------------------------------------------------- */
-/*  Taxonomy                                                                   */
+/*  Taxonomy store                                                             */
 /*                                                                             */
 /*  How the catalogue is organised: categories, tags and the colour palette.   */
-/*  Categories and colours ship with the store and are overlaid the same way    */
-/*  products are — edits shadow the seed, removals are tombstoned, additions    */
-/*  are appended — so the starting set is always recoverable. Tags are new to    */
-/*  the dashboard, so they simply live here.                                    */
+/*  Postgres when Supabase is configured, the JSON file in `data/` when it is   */
+/*  not — see `store.ts` for the same arrangement over products.               */
 /* -------------------------------------------------------------------------- */
 
-export interface Taxonomy {
-  version: 1;
-  /** Dashboard-authored categories and edited copies of seed ones, by id. */
-  categories: Record<string, Category>;
-  /** Seed category ids hidden from the storefront. */
-  deletedCategories: string[];
-  /** Added or re-pointed colours, `name → hex`. */
-  swatches: Record<string, string>;
-  /** Seed colour names removed from the palette. */
-  deletedSwatches: string[];
-  tags: Record<string, Tag>;
-  updatedAt: string | null;
-}
+const backend = () => (isSupabaseConfigured() ? db : file);
 
-const EMPTY: Taxonomy = {
-  version: 1,
-  categories: {},
-  deletedCategories: [],
-  swatches: {},
-  deletedSwatches: [],
-  tags: {},
-  updatedAt: null,
-};
-
-export const newCategoryId = () => mintId("cat_adm");
-export const newTagId = () => mintId("tag");
-
-function mintId(prefix: string): string {
-  return `${prefix}_${Date.now().toString(36)}${Math.floor(Math.random() * 1296)
-    .toString(36)
-    .padStart(2, "0")}`;
-}
-
-function isCategory(value: unknown): value is Category {
-  const c = value as Partial<Category> | null;
-  return (
-    !!c &&
-    typeof c === "object" &&
-    typeof c.id === "string" &&
-    typeof c.slug === "string" &&
-    typeof c.name === "string"
-  );
-}
-
-function isTag(value: unknown): value is Tag {
-  const t = value as Partial<Tag> | null;
-  return (
-    !!t &&
-    typeof t === "object" &&
-    typeof t.id === "string" &&
-    typeof t.slug === "string" &&
-    typeof t.name === "string"
-  );
-}
-
-const HEX = /^#[0-9a-fA-F]{3,8}$/;
-
-const store = createJsonStore<Taxonomy>("taxonomy.json", EMPTY, (parsed) => {
-  const raw = (parsed ?? {}) as Partial<Taxonomy>;
-
-  const categories: Record<string, Category> = {};
-  for (const [id, category] of Object.entries(raw.categories ?? {})) {
-    if (isCategory(category)) categories[id] = category;
-  }
-
-  const tags: Record<string, Tag> = {};
-  for (const [id, tag] of Object.entries(raw.tags ?? {})) {
-    if (isTag(tag)) tags[id] = tag;
-  }
-
-  const swatches: Record<string, string> = {};
-  for (const [name, hex] of Object.entries(raw.swatches ?? {})) {
-    if (typeof hex === "string" && HEX.test(hex)) swatches[name] = hex;
-  }
-
-  const strings = (value: unknown) =>
-    Array.isArray(value)
-      ? value.filter((v): v is string => typeof v === "string")
-      : [];
-
-  return {
-    version: 1,
-    categories,
-    deletedCategories: strings(raw.deletedCategories),
-    swatches,
-    deletedSwatches: strings(raw.deletedSwatches),
-    tags,
-    updatedAt: raw.updatedAt ?? null,
-  };
-});
-
-export function readTaxonomy(): Promise<Taxonomy> {
-  return store.read();
-}
-
-const touch = (taxonomy: Taxonomy) => {
-  taxonomy.updatedAt = new Date().toISOString();
-};
+export const newCategoryId = file.newCategoryId;
+export const newTagId = file.newTagId;
 
 /* -------------------------------------------------------------------------- */
 /*  Categories                                                                */
 /* -------------------------------------------------------------------------- */
 
-export async function saveCategory(category: Category): Promise<void> {
-  await store.mutate((taxonomy) => {
-    taxonomy.categories[category.id] = category;
-    taxonomy.deletedCategories = taxonomy.deletedCategories.filter(
-      (id) => id !== category.id,
-    );
-    touch(taxonomy);
-  });
+export function listCategories(): Promise<Category[]> {
+  return backend().listCategories();
 }
 
-export async function deleteCategory(
+/** Seed categories the operator hid — the dashboard offers them back. */
+export function listRemovedSeedCategories(): Promise<Category[]> {
+  return backend().listRemovedSeedCategories();
+}
+
+export function saveCategory(category: Category): Promise<void> {
+  return backend().saveCategory(category);
+}
+
+export function deleteCategory(
   id: string,
-  { isSeedCategory }: { isSeedCategory: boolean },
+  options: { isSeedCategory: boolean },
 ): Promise<void> {
-  await store.mutate((taxonomy) => {
-    delete taxonomy.categories[id];
-    if (isSeedCategory && !taxonomy.deletedCategories.includes(id))
-      taxonomy.deletedCategories.push(id);
-    touch(taxonomy);
-  });
+  return backend().deleteCategory(id, options);
 }
 
-export async function restoreCategory(id: string): Promise<void> {
-  await store.mutate((taxonomy) => {
-    taxonomy.deletedCategories = taxonomy.deletedCategories.filter(
-      (tombstone) => tombstone !== id,
-    );
-    touch(taxonomy);
-  });
+export function restoreCategory(id: string): Promise<void> {
+  return backend().restoreCategory(id);
 }
 
 /* -------------------------------------------------------------------------- */
 /*  Tags                                                                      */
 /* -------------------------------------------------------------------------- */
 
-export async function saveTag(tag: Tag): Promise<void> {
-  await store.mutate((taxonomy) => {
-    taxonomy.tags[tag.id] = tag;
-    touch(taxonomy);
-  });
+export function listTags(): Promise<Tag[]> {
+  return backend().listTags();
+}
+
+export function saveTag(tag: Tag): Promise<void> {
+  return backend().saveTag(tag);
 }
 
 /** Returns the removed tag's slug, so callers can strip it from products. */
-export async function deleteTag(id: string): Promise<string | null> {
-  return store.mutate((taxonomy) => {
-    const slug = taxonomy.tags[id]?.slug ?? null;
-    delete taxonomy.tags[id];
-    touch(taxonomy);
-    return slug;
-  });
+export function deleteTag(id: string): Promise<string | null> {
+  return backend().deleteTag(id);
 }
 
 /* -------------------------------------------------------------------------- */
 /*  Colours                                                                   */
 /* -------------------------------------------------------------------------- */
 
-export async function saveSwatch(name: string, hex: string): Promise<void> {
-  await store.mutate((taxonomy) => {
-    taxonomy.swatches[name] = hex;
-    taxonomy.deletedSwatches = taxonomy.deletedSwatches.filter(
-      (removed) => removed !== name,
-    );
-    touch(taxonomy);
-  });
+export function listSwatches(): Promise<Record<string, string>> {
+  return backend().listSwatches();
 }
 
-export async function deleteSwatch(
+export function listRemovedSeedSwatches(): Promise<
+  { name: string; hex: string }[]
+> {
+  return backend().listRemovedSeedSwatches();
+}
+
+export function saveSwatch(name: string, hex: string): Promise<void> {
+  return backend().saveSwatch(name, hex);
+}
+
+export function deleteSwatch(
   name: string,
-  { isSeedSwatch }: { isSeedSwatch: boolean },
+  options: { isSeedSwatch: boolean },
 ): Promise<void> {
-  await store.mutate((taxonomy) => {
-    delete taxonomy.swatches[name];
-    if (isSeedSwatch && !taxonomy.deletedSwatches.includes(name))
-      taxonomy.deletedSwatches.push(name);
-    touch(taxonomy);
-  });
+  return backend().deleteSwatch(name, options);
 }
 
-export async function restoreSwatch(name: string): Promise<void> {
-  await store.mutate((taxonomy) => {
-    taxonomy.deletedSwatches = taxonomy.deletedSwatches.filter(
-      (removed) => removed !== name,
-    );
-    touch(taxonomy);
-  });
+export function restoreSwatch(name: string): Promise<void> {
+  return backend().restoreSwatch(name);
 }

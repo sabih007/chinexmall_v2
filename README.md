@@ -26,12 +26,14 @@ src/
 │   │   ├── collections/[slug]/   Category pages
 │   │   ├── product/[slug]/       Product detail (prerendered per product)
 │   │   ├── new-arrivals/ best-sellers/ deals/
-│   │   ├── cart/ wishlist/ account/
+│   │   ├── cart/ wishlist/
+│   │   ├── account/              Sign in · register · profile, and the
+│   │   │                         Server Actions behind them
 │   │   ├── checkout/             Address, delivery and payment (COD · bank transfer)
 │   │   ├── order/[number]/       Order confirmation
 │   │   └── faq/ our-story/ contact/ policies/[slug]/
-│   ├── admin/                    Store dashboard — login, overview, products,
-│   │   │                         coupons
+│   ├── admin/                    Store dashboard — login, overview, orders,
+│   │   │                         products, coupons, database
 │   │   ├── actions.ts            Server Actions: sign in, save, delete, restore
 │   │   ├── login/
 │   │   └── (dashboard)/          Signed-in pages, behind the sidebar chrome
@@ -42,8 +44,11 @@ src/
 ├── components/
 │   ├── admin/                    AdminNav · Fields · ProductForm ·
 │   │                             ImageManager · CouponForm · CategoryForm ·
-│   │                             TagRow · SwatchRow · ConfirmSubmit
-│   ├── layout/                   AnnouncementBar · Header · MobileNav · BottomNav ·
+│   │                             TagRow · SwatchRow · ConfirmSubmit ·
+│   │                             OrderStatusForm · ImportButton
+│   ├── account/                  SignInForm · RegisterForm · ProfileForm ·
+│   │                             PasswordForm · OrderHistory · AccountLink
+│   ├── layout/                   AnnouncementBar · Header · Logo · MobileNav · BottomNav ·
 │   │                             Footer · StorefrontShell
 │   ├── home/                     Hero · CategoryGrid · ProductSections · PromoBanner ·
 │   │                             WhyShop · ImportStory · ShopTheLook · LookBoard ·
@@ -63,13 +68,19 @@ src/
 │                                 products.ts · categories.ts · swatches.ts ·
 │                                 reviews.ts · looks.ts
 └── lib/                          repository.ts · types.ts · site.ts · format.ts ·
-    │                             cart.ts · orders.ts · coupons.ts · pricing.ts ·
-    │                             images.ts · whatsapp.ts · utils.ts
-    └── admin/                    auth.ts · session.ts · json-store.ts ·
-                                  store.ts · taxonomy-store.ts ·
-                                  coupons-store.ts · product-form.ts ·
-                                  category-form.ts · coupon-form.ts ·
-                                  uploads.ts · form-state.ts
+    │                             cart.ts · orders.ts · order-store.ts ·
+    │                             order-status.ts · coupons.ts · pricing.ts ·
+    │                             images.ts · whatsapp.ts · utils.ts ·
+    │                             json-store.ts
+    │                             (every *-store has .file and .db backends)
+    ├── account/                  auth.ts · session.ts · store.ts ·
+    │                             form.ts · throttle.ts
+    ├── supabase/                 client.ts · rows.ts · query.ts
+    └── admin/                    auth.ts · session.ts · store.ts ·
+                                  taxonomy-store.ts · coupons-store.ts ·
+                                  product-form.ts · category-form.ts ·
+                                  coupon-form.ts · uploads.ts · import.ts ·
+                                  form-state.ts
 ```
 
 ---
@@ -147,6 +158,8 @@ it never falls back to a default password.
 | Products added or edited | `data/catalogue.json` | Created on first save |
 | Categories, tags and colours | `data/taxonomy.json` | Created on first save |
 | Coupons and their redemption counts | `data/coupons.json` | Created on first save |
+| Customer accounts | `data/customers.json` | Created on first sign-up — git-ignored, see [Customer accounts](#customer-accounts) |
+| Orders | `data/orders.json` | Created with the first order — git-ignored |
 | Uploaded photos | `public/uploads/` | Served straight off the origin |
 
 The seed catalogue in `src/data/products.ts` is never rewritten. The dashboard
@@ -159,10 +172,10 @@ Both paths are ordinary files, which means:
 
 - They must live on a **persistent disk**. On a normal Node host (a VPS,
   Docker with a volume, Railway, Render) this works as-is. On a read-only
-  serverless filesystem such as Vercel, writes will not survive — point
-  `saveProduct` in `src/lib/admin/store.ts` at a database and
-  `saveUploadedImages` in `src/lib/admin/uploads.ts` at object storage. Both
-  return the same shapes, so no page or component changes.
+  serverless filesystem such as Vercel, writes will not survive — every product
+  edit, uploaded photo, account and order would be lost at the next deploy.
+  [Connect Supabase](#the-database) instead: it is one screen of setup, and
+  every store module already has a Postgres backend behind the same contract.
 - They are **your content**, so they are not git-ignored. Commit them if you
   deploy by pushing, and include them in whatever you back up.
 
@@ -235,9 +248,122 @@ allowed.
   only a convenience. Server Actions are reachable by direct POST, so every
   action and the dashboard layout call `requireAdmin()` themselves.
 - `/admin` is excluded from `robots.txt` and every dashboard page is
-  `noindex`.
+  `noindex`. So is every `/account` page.
 - Put the site behind HTTPS in production — the session cookie is only marked
   `secure` when `NODE_ENV=production`.
+
+---
+
+## The database
+
+The store runs on one of two backends, chosen by whether `SUPABASE_URL` and
+`SUPABASE_SERVICE_ROLE_KEY` are set:
+
+| | Without Supabase | With Supabase |
+| --- | --- | --- |
+| Catalogue, coupons, taxonomy | `data/*.json` | Postgres tables |
+| Customer accounts, orders | `data/*.json` | Postgres tables |
+| Product photos | `public/uploads/` | a Storage bucket |
+| Survives a serverless deploy | No | Yes |
+
+Nothing above the store modules knows which is live — every page, action and
+route talks to `src/lib/admin/store.ts`, `taxonomy-store.ts`,
+`coupons-store.ts`, `src/lib/account/store.ts` and `src/lib/order-store.ts`,
+and each of those picks a backend per call. Adding the environment variables
+and restarting is the whole switch.
+
+**The dashboard's [Database page](http://localhost:3000/admin/database) says
+which one is running, what is in it, and walks through the setup.** In short:
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. **SQL Editor → New query**, paste `supabase/schema.sql`, run it. It creates
+   the tables, the `redeem_coupon()` function and turns on Row Level Security.
+3. **Storage → New bucket**, named `product-images`, marked **public**.
+4. Copy the project URL and the **service role** key from
+   **Project Settings → API** into `.env.local`:
+
+   ```
+   SUPABASE_URL=https://<project>.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=<service role key>
+   ```
+
+5. Restart, open **/admin/database** and press **Import** — it copies the seed
+   catalogue, and anything already saved under `data/`, into the new database.
+   It only inserts what is missing, so running it twice is safe.
+
+### How it connects
+
+- **One client, service role, server only.** `src/lib/supabase/client.ts` is
+  marked `server-only`, so importing it from a client component is a build
+  error rather than a leaked key. Every table has RLS enabled with **no
+  policies**: the anon key can read nothing, and the service role bypasses RLS
+  by design. If you later query Supabase from a browser, write policies
+  deliberately — do not turn RLS off.
+- **Column names live in one file.** `src/lib/supabase/rows.ts` maps rows to
+  the domain types and back; nothing else knows that `compareAtPrice` is
+  `compare_at_price` in Postgres.
+- **Reads page.** PostgREST silently caps a response at 1,000 rows, so
+  `fetchAll` in `src/lib/supabase/query.ts` pages rather than truncating a
+  growing catalogue.
+- **The coupon counter is one statement.** `redeem_coupon()` increments and
+  checks the limit in a single `update`, so two customers spending the last use
+  of a code at the same moment cannot both get it.
+- **Removing a seed product soft-deletes it** (`deleted_at`), which is what
+  keeps the dashboard's "restore" working after the import.
+
+### What the database does not hold
+
+The seed catalogue in `src/data` is still the starting point, reviews
+(`src/data/reviews.ts`) and lookbooks are still code, and the cart and wishlist
+are still `localStorage` on the shopper's device.
+
+---
+
+## Customer accounts
+
+Shoppers can create an account, sign in and keep their delivery details in one
+place. Nothing about it is compulsory: **guest checkout is unchanged**, and an
+account only ever saves a step.
+
+| Page | What it does |
+| --- | --- |
+| `/account/register` | Create an account — name, email, mobile, password |
+| `/account/login` | Sign in; `?next=/checkout` returns them where they were |
+| `/account` | Their details, saved address, password, sign out |
+
+- **Sign-up prefills the checkout.** A signed-in shopper's name, number and
+  saved address seed the checkout form, and the address they actually order to
+  is written back to the account afterwards. The device's own saved details
+  still fill in anything the account does not carry.
+- **Where the data goes.** `data/customers.json`, through the same
+  `createJsonStore` the dashboard uses. Unlike the catalogue it is
+  **git-ignored**: it holds people's names, numbers, addresses and password
+  hashes, none of which belong in a repository.
+- **Passwords** are stretched with PBKDF2-SHA256 (210,000 iterations, a salt
+  per account) in `src/lib/account/auth.ts`. Nothing anywhere stores or logs a
+  plaintext password.
+- **Sessions** are a signed, httpOnly cookie carrying the customer id and an
+  expiry — 30 days, and no server-side session table. A second, readable cookie
+  carries only the shopper's first name so the header can greet them without a
+  request on every page; it is a greeting, never a credential.
+  `CUSTOMER_SESSION_SECRET` signs the cookie. Leave it unset and a secret is
+  generated on first use and kept in `data/customers.json` — set it explicitly
+  once you run more than one instance, or anywhere `data/` is not persistent,
+  or every instance will sign shoppers out of each other's sessions.
+- **Every page and action resolves the session itself** through
+  `currentCustomer()` / `requireCustomer()` in `src/lib/account/session.ts`,
+  which also confirms the account still exists. Sign-in attempts are throttled
+  per email address, in memory, per process (`throttle.ts`) — put a real rate
+  limiter in front of the app if you expect to be worth attacking.
+
+- **Orders placed while signed in are filed against the account** and listed on
+  `/account`, newest first, with the status the dashboard last set. A guest's
+  order is stored too, just not attached to anyone.
+
+**Not there yet:** password reset by email, and social sign-in. To move accounts
+onto a real auth provider, reimplement `src/lib/account/store.ts` and
+`session.ts`; the forms, actions and pages above them talk in `CustomerAccount`
+and do not care where it comes from.
 
 ---
 
@@ -249,7 +375,7 @@ Supabase, the Shopify Storefront API or a custom admin backend, reimplement
 that one file against the same signatures — pages and components do not change.
 
 ```ts
-getCatalogue()              // seed + dashboard overlay, the source for the rest
+getCatalogue()              // every live product, the source for the rest
 getProducts(query)          // filter / sort / paginate, returns { items, total }
 getProductBySlug(slug)
 getAllProductSlugs()        // drives generateStaticParams
@@ -270,15 +396,15 @@ The `Product` shape in `src/lib/types.ts` matches the spec's data model
 Other integration seams:
 
 - **Orders** — `src/app/api/orders/route.ts` validates the customer, re-prices
-  the basket and returns a placed order. Persist it, decrement stock and send
-  the confirmation at the marked `TODO`; the checkout UI needs no changes.
+  the basket, stores the order and returns it. Decrementing stock and sending
+  the confirmation are still marked `TODO`; the checkout UI needs no changes.
 - **Payment gateway** — add an entry to `paymentMethods` in `src/lib/site.ts`
   and branch on it after the order is created. The two methods shipped
   (cash on delivery, bank transfer) need no gateway.
 - **Newsletter** — `src/app/api/newsletter/route.ts` validates and
   acknowledges; forward the address to your provider at the marked `TODO`.
-- **Accounts** — `src/app/(storefront)/account/page.tsx` is a placeholder. The
-  dashboard has its own single-operator sign-in and shares nothing with it.
+- **Accounts** — see [Customer accounts](#customer-accounts). The dashboard has
+  its own single-operator sign-in and shares nothing with it.
 - **Cart persistence** — `StoreProvider` writes to `localStorage`; swap that
   for a cart API and the hooks stay the same.
 
@@ -295,10 +421,15 @@ Other integration seams:
   delivery fee itself, so an edited request cannot buy anything cheaply.
   `src/lib/orders.ts` holds the rules and is imported by both sides, so the
   errors shown while typing are the same ones the server enforces.
-- **A placed order rides to the confirmation page in `sessionStorage`,** which
-  is what lets `/order/[number]` work with no database. Replace `readOrder` in
-  `OrderConfirmation.tsx` with a fetch by order number once orders persist —
-  the page already handles the "not on this device" case.
+- **Orders are stored when they are placed,** and `/order/[number]` renders one
+  from the server only for the account that placed it. Everyone else — guests,
+  and anyone typing in a number — sees the copy their own browser kept in
+  `sessionStorage`, so a short order number is never a way to read a stranger's
+  address. The page still handles the "not on this device" case.
+- **An order is a record, not a document that keeps changing.** The basket, the
+  prices, the coupon and the delivery address are written once, exactly as they
+  were at checkout; only the status moves afterwards. Editing a product or a
+  saved address never rewrites what someone ordered.
 - **Cart and wishlist are per-device** (`localStorage`), hydrated after mount.
   Components that depend on them check `hydrated` first to avoid a flash of
   wrong state.

@@ -7,6 +7,7 @@ import type {
   ProductFormErrors,
   ProductFormValues,
 } from "./product-form";
+import type { OrderStatus } from "@/lib/types";
 
 /**
  * Return types for the dashboard's Server Actions.
@@ -19,6 +20,23 @@ import type {
 export interface LoginState {
   message?: string;
 }
+
+/** What the order page's status control gets back. */
+export interface OrderStatusState {
+  /** The status now stored, echoed so the control settles on it. */
+  status?: OrderStatus;
+  message?: string;
+}
+
+/** What the Database page's import button gets back. */
+export interface ImportState {
+  status: "idle" | "done" | "error";
+  message?: string;
+  /** What was written, per table, for the summary line. */
+  counts?: Record<string, number>;
+}
+
+export const initialImportState: ImportState = { status: "idle" };
 
 export interface ProductFormState {
   status: "idle" | "error";

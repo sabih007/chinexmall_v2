@@ -324,3 +324,49 @@ export interface CheckoutRequest {
     selections: Record<string, string>;
   }[];
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Customer accounts                                                         */
+/* -------------------------------------------------------------------------- */
+
+/** The delivery address a shopper saves once and reuses at every checkout. */
+export interface SavedAddress {
+  address1: string;
+  address2: string;
+  city: string;
+  province: string;
+  postalCode: string;
+}
+
+/**
+ * A registered shopper as stored on the server.
+ *
+ * `passwordHash` is the reason this shape never crosses to the client: pages
+ * and API routes hand out `CustomerAccount` instead.
+ */
+export interface CustomerRecord {
+  id: string;
+  /** Lower-cased and trimmed — the login identifier, unique across the store. */
+  email: string;
+  firstName: string;
+  lastName: string;
+  /** E.164, or empty until the shopper adds one. */
+  phone: string;
+  address: SavedAddress | null;
+  marketingOptIn: boolean;
+  passwordHash: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Everything about a shopper that is safe to send to their own browser. */
+export type CustomerAccount = Omit<CustomerRecord, "passwordHash">;
+
+/**
+ * An order as it is stored, with the account that placed it — null when a
+ * guest checked out. The confirmation page uses it to decide whether the
+ * person asking is allowed to see the order.
+ */
+export interface StoredOrder extends Order {
+  customerId: string | null;
+}

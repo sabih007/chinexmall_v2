@@ -6,11 +6,11 @@ import path from "node:path";
 /**
  * A tiny JSON file store: read, and read-modify-write under a lock.
  *
- * Everything the dashboard persists — the catalogue overlay, the coupons —
- * goes through one of these. Writes land in a temp file and are renamed into
- * place, so a crash mid-write cannot truncate the store, and mutations queue
- * behind each other so two operators saving at once cannot overwrite one
- * another.
+ * Everything the app persists outside the seed data — the catalogue overlay,
+ * the coupons, the customer accounts — goes through one of these. Writes land
+ * in a temp file and are renamed into place, so a crash mid-write cannot
+ * truncate the store, and mutations queue behind each other so two writers
+ * saving at once cannot overwrite one another.
  *
  * Swapping any of this for a database means reimplementing the store module
  * that calls `createJsonStore`, not its callers.

@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useCustomerName } from "@/components/account/useCustomerName";
 import { Logo } from "@/components/layout/Logo";
 import { useStore } from "@/components/providers/StoreProvider";
 import { Drawer } from "@/components/ui/Drawer";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils";
 export function MobileNav() {
   const { menuOpen, closeMenu } = useStore();
   const pathname = usePathname();
+  const customerName = useCustomerName();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
@@ -113,8 +115,11 @@ export function MobileNav() {
             </Link>
           </li>
           <li>
-            <Link href="/account" className="text-[13px] text-muted">
-              Account
+            <Link
+              href={customerName ? "/account" : "/account/login"}
+              className="text-[13px] text-muted"
+            >
+              {customerName ? "Your account" : "Sign in or create an account"}
             </Link>
           </li>
           <li>

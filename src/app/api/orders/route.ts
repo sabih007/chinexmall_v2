@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { currentCustomer } from "@/lib/account/session";
 import { recordRedemption } from "@/lib/admin/coupons-store";
+import { saveOrder } from "@/lib/order-store";
 import { applyCoupon, couponProblem, normaliseCouponCode } from "@/lib/coupons";
 import {
   deliveryFee,
@@ -24,12 +26,12 @@ import type {
 } from "@/lib/types";
 
 /**
- * Order placement seam.
+ * Order placement.
  *
  * Validates the customer, re-prices the basket from the catalogue — the client
- * never gets to name its own price — re-checks any coupon, and returns the
- * placed order. Wire the marked section to your order system; the checkout UI
- * needs no changes.
+ * never gets to name its own price — re-checks any coupon, stores the order and
+ * returns it. A signed-in shopper's order is filed against their account; a
+ * guest's is filed on its own.
  */
 
 interface Failure {
@@ -138,10 +140,24 @@ export async function POST(request: Request) {
     eta: deliveryMethod(delivery).eta,
   };
 
-  // TODO: persist `order`, decrement stock, and notify the store —
-  // order confirmation email to `order.customer.email`, WhatsApp or SMS to
-  // `order.customer.phone`. Until then the confirmation page renders the order
-  // returned here straight from the browser's sessionStorage.
+  /* Filed against the account when one is signed in, so it shows up in the
+     shopper's order history — and stored either way. */
+  const account = await currentCustomer();
+
+  try {
+    await saveOrder(order, account?.id ?? null);
+  } catch (cause) {
+    /* Better to ask for a retry than to hand over a confirmation number for an
+       order nobody recorded. */
+    console.error("Could not store order", order.number, cause);
+    return fail(
+      { message: "We could not record that order. Please try again." },
+      500,
+    );
+  }
+
+  // TODO: decrement stock, and notify the store — order confirmation email to
+  // `order.customer.email`, WhatsApp or SMS to `order.customer.phone`.
 
   return NextResponse.json({ order }, { status: 201 });
 }

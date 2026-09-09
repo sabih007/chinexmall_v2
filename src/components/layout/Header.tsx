@@ -10,11 +10,11 @@ import {
   Search,
   ShoppingBag,
   Sparkles,
-  User,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { AccountLink } from "@/components/account/AccountLink";
 import { Logo } from "@/components/layout/Logo";
 import { useStore } from "@/components/providers/StoreProvider";
 import { Container } from "@/components/ui/Primitives";
@@ -177,13 +177,7 @@ export function Header() {
               <Search size={19} strokeWidth={1.6} />
             </button>
 
-            <Link
-              href="/account"
-              aria-label="Account"
-              className="hidden h-10 w-10 items-center justify-center rounded-full bg-mint text-mint-ink transition-colors hover:bg-mint-deep lg:flex"
-            >
-              <User size={17} strokeWidth={1.7} />
-            </Link>
+            <AccountLink />
 
             <Link
               href="/wishlist"

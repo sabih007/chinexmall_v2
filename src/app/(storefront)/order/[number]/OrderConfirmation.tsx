@@ -34,12 +34,18 @@ function readOrder(number: string): Order | null {
 /**
  * Order confirmation.
  *
- * The order is read from sessionStorage, where checkout left it — which is why
- * this page works with no database behind it. Once orders are persisted,
- * replace `readOrder` with a fetch by order number (and let the server render
- * it); everything below stays as it is.
+ * A signed-in shopper's own order arrives from the server, already looked up
+ * by number. For a guest — or anyone else — it is read from sessionStorage,
+ * where their checkout left it, which is what keeps an order number from being
+ * a way to read a stranger's address.
  */
-export function OrderConfirmation({ number }: { number: string }) {
+export function OrderConfirmation({
+  number,
+  order: fromServer = null,
+}: {
+  number: string;
+  order?: Order | null;
+}) {
   /* sessionStorage cannot be read while rendering on the server, so wait for
      hydration before deciding what to show. */
   const hydrated = useSyncExternalStore(
@@ -48,11 +54,11 @@ export function OrderConfirmation({ number }: { number: string }) {
     () => false,
   );
   const order = useMemo(
-    () => (hydrated ? readOrder(number) : null),
-    [hydrated, number],
+    () => fromServer ?? (hydrated ? readOrder(number) : null),
+    [fromServer, hydrated, number],
   );
 
-  if (!hydrated) {
+  if (!order && !hydrated) {
     return (
       <div className="space-y-4 pb-24">
         <Skeleton className="h-40 w-full" />

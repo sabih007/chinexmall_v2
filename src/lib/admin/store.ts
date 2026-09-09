@@ -1,126 +1,57 @@
 import "server-only";
 
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import type { Product } from "@/lib/types";
-import { createJsonStore } from "./json-store";
+import * as db from "./catalogue.db";
+import * as file from "./catalogue.file";
 
 /* -------------------------------------------------------------------------- */
-/*  Catalogue overlay                                                          */
+/*  Catalogue store                                                            */
 /*                                                                             */
-/*  Products created or edited in the dashboard are persisted as JSON on disk  */
-/*  and layered over the seed catalogue by `src/lib/repository.ts`. The seed    */
-/*  file is never rewritten, so an edit is always reversible and a bad deploy   */
-/*  cannot lose the original catalogue.                                        */
+/*  One contract, two backends: Postgres when Supabase is configured, the JSON */
+/*  file in `data/` when it is not. Callers — the dashboard's Server Actions    */
+/*  and `src/lib/repository.ts` — never learn which is in use.                 */
 /*                                                                             */
-/*  Swapping this for Supabase or Postgres means reimplementing this file and   */
-/*  the two calls repository.ts makes into it — nothing else changes.          */
+/*  The choice is made per call rather than at import time, so adding the       */
+/*  environment variables and restarting is all it takes to switch.            */
 /* -------------------------------------------------------------------------- */
 
-export interface CatalogueOverlay {
-  version: 1;
-  /** Dashboard-authored products and edited copies of seed products, by id. */
-  products: Record<string, Product>;
-  /** Seed product ids the operator removed from the storefront. */
-  deleted: string[];
-  updatedAt: string | null;
-}
-
-const EMPTY: CatalogueOverlay = {
-  version: 1,
-  products: {},
-  deleted: [],
-  updatedAt: null,
-};
+const backend = () => (isSupabaseConfigured() ? db : file);
 
 /** Ids for dashboard-authored products, so they never collide with `prd_*`. */
-export function newProductId(): string {
-  return `adm_${Date.now().toString(36)}${Math.floor(Math.random() * 1296)
-    .toString(36)
-    .padStart(2, "0")}`;
+export const newProductId = file.newProductId;
+
+/** The live catalogue, dashboard-authored products first. */
+export function listProducts(): Promise<Product[]> {
+  return backend().listProducts();
 }
 
-/** A hand-edited JSON file should degrade to "no overlay", never crash a page. */
-function isProduct(value: unknown): value is Product {
-  const p = value as Partial<Product> | null;
-  return (
-    !!p &&
-    typeof p === "object" &&
-    typeof p.id === "string" &&
-    typeof p.slug === "string" &&
-    typeof p.name === "string" &&
-    typeof p.price === "number" &&
-    Array.isArray(p.images)
-  );
+/** Seed products the operator removed — the dashboard offers them back. */
+export function listRemovedSeedProducts(): Promise<Product[]> {
+  return backend().listRemovedSeedProducts();
 }
 
-const store = createJsonStore<CatalogueOverlay>(
-  "catalogue.json",
-  EMPTY,
-  (parsed) => {
-    const raw = (parsed ?? {}) as Partial<CatalogueOverlay>;
-    const products: Record<string, Product> = {};
-    for (const [id, product] of Object.entries(raw.products ?? {})) {
-      if (isProduct(product)) products[id] = product;
-    }
-    return {
-      version: 1,
-      products,
-      deleted: (raw.deleted ?? []).filter(
-        (id): id is string => typeof id === "string",
-      ),
-      updatedAt: raw.updatedAt ?? null,
-    };
-  },
-);
-
-export function readOverlay(): Promise<CatalogueOverlay> {
-  return store.read();
-}
-
-/** Creates or replaces a product. Editing a seed product shadows it. */
-export async function saveProduct(product: Product): Promise<void> {
-  await store.mutate((overlay) => {
-    overlay.products[product.id] = product;
-    overlay.deleted = overlay.deleted.filter((id) => id !== product.id);
-    overlay.updatedAt = new Date().toISOString();
-  });
+/** Creates or replaces a product. */
+export function saveProduct(product: Product): Promise<void> {
+  return backend().saveProduct(product);
 }
 
 /**
- * Removes a product from the storefront: dashboard-authored ones are dropped
- * outright, seed ones are tombstoned so they stay out after a redeploy.
+ * Removes a product from the storefront. A seed product is kept as a tombstone
+ * so it stays out after a redeploy, and can be put back.
  */
-export async function deleteProduct(
+export function deleteProduct(
   id: string,
-  { isSeedProduct }: { isSeedProduct: boolean },
+  options: { isSeedProduct: boolean },
 ): Promise<void> {
-  await store.mutate((overlay) => {
-    delete overlay.products[id];
-    if (isSeedProduct && !overlay.deleted.includes(id)) overlay.deleted.push(id);
-    overlay.updatedAt = new Date().toISOString();
-  });
+  return backend().deleteProduct(id, options);
 }
 
-/**
- * Removes a tag from every product carrying it, so deleting a tag cannot leave
- * products pointing at a label that no longer exists. Returns how many changed.
- */
-export async function stripTagFromProducts(slug: string): Promise<number> {
-  return store.mutate((overlay) => {
-    let changed = 0;
-    for (const product of Object.values(overlay.products)) {
-      if (!product.tags?.includes(slug)) continue;
-      product.tags = product.tags.filter((tag) => tag !== slug);
-      changed += 1;
-    }
-    if (changed > 0) overlay.updatedAt = new Date().toISOString();
-    return changed;
-  });
+export function restoreProduct(id: string): Promise<void> {
+  return backend().restoreProduct(id);
 }
 
-/** Puts a tombstoned seed product back on the storefront. */
-export async function restoreProduct(id: string): Promise<void> {
-  await store.mutate((overlay) => {
-    overlay.deleted = overlay.deleted.filter((tombstone) => tombstone !== id);
-    overlay.updatedAt = new Date().toISOString();
-  });
+/** Returns how many products lost the tag. */
+export function stripTagFromProducts(slug: string): Promise<number> {
+  return backend().stripTagFromProducts(slug);
 }

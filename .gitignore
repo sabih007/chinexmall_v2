@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# customer accounts — names, addresses and password hashes, not store content
+/data/customers.json
+
+# orders carry names, addresses and phone numbers
+/data/orders.json

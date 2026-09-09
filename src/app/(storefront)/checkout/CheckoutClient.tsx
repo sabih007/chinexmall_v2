@@ -4,6 +4,7 @@ import { Lock, MessageCircle, RotateCcw, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { rememberCheckoutAddressAction } from "@/app/(storefront)/account/actions";
 import {
   Field,
   OptionCard,
@@ -39,6 +40,7 @@ import type {
   DeliveryMethodId,
   Order,
   PaymentMethodId,
+  SavedAddress,
 } from "@/lib/types";
 import { whatsappLink } from "@/lib/whatsapp";
 
@@ -59,7 +61,47 @@ function savedCustomer(): CustomerDetails {
   return emptyCustomer;
 }
 
-export function CheckoutClient() {
+/** What the checkout needs of a signed-in shopper — no more than that. */
+export interface CheckoutAccount {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: SavedAddress | null;
+}
+
+/**
+ * The form's starting values: the account wherever it has something to say,
+ * this device's last checkout for everything else — the delivery note, a
+ * second address line the account never captured.
+ */
+function initialCustomer(account: CheckoutAccount | null): CustomerDetails {
+  const local = savedCustomer();
+  if (!account) return local;
+
+  return {
+    ...local,
+    firstName: account.firstName || local.firstName,
+    lastName: account.lastName || local.lastName,
+    email: account.email || local.email,
+    phone: account.phone || local.phone,
+    ...(account.address
+      ? {
+          address1: account.address.address1,
+          address2: account.address.address2 || local.address2,
+          city: account.address.city,
+          province: account.address.province,
+          postalCode: account.address.postalCode || local.postalCode,
+        }
+      : {}),
+  };
+}
+
+export function CheckoutClient({
+  account = null,
+}: {
+  account?: CheckoutAccount | null;
+}) {
   const router = useRouter();
   const { lines, hydrated, clearCart } = useStore();
 
@@ -80,6 +122,7 @@ export function CheckoutClient() {
   return (
     <CheckoutForm
       lines={lines}
+      account={account}
       onPlaced={() => {
         placed.current = true;
         clearCart();
@@ -90,14 +133,18 @@ export function CheckoutClient() {
 
 function CheckoutForm({
   lines,
+  account,
   onPlaced,
 }: {
   lines: CartLine[];
+  account: CheckoutAccount | null;
   onPlaced: () => void;
 }) {
   const router = useRouter();
 
-  const [customer, setCustomer] = useState<CustomerDetails>(savedCustomer);
+  const [customer, setCustomer] = useState<CustomerDetails>(() =>
+    initialCustomer(account),
+  );
   const [delivery, setDelivery] = useState<DeliveryMethodId>("standard");
   const [payment, setPayment] = useState<PaymentMethodId>("cod");
   const [coupon, setCoupon] = useState<Coupon | null>(null);
@@ -205,6 +252,19 @@ function CheckoutForm({
       } catch {
         /* the confirmation page falls back to a short thank-you */
       }
+      /* Keep the account's saved address in step with what was just delivered
+         to. Fire and forget: the order is placed either way. */
+      if (account) {
+        void rememberCheckoutAddressAction({
+          phone: customer.phone,
+          address1: customer.address1,
+          address2: customer.address2,
+          city: customer.city,
+          province: customer.province,
+          postalCode: customer.postalCode,
+        }).catch(() => undefined);
+      }
+
       onPlaced();
       router.replace(`/order/${data.order.number}`);
     } catch {

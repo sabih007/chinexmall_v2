@@ -22,7 +22,9 @@ import {
 import type {
   CategoryFormState,
   CouponFormState,
+  ImportState,
   LoginState,
+  OrderStatusState,
   ProductFormState,
 } from "@/lib/admin/form-state";
 import {
@@ -59,6 +61,10 @@ import {
   saveTag,
 } from "@/lib/admin/taxonomy-store";
 import { UploadError, saveUploadedImages } from "@/lib/admin/uploads";
+import { importSeedData } from "@/lib/admin/import";
+import { isOrderStatus, statusLabels } from "@/lib/order-status";
+import { setOrderStatus } from "@/lib/order-store";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import {
   getCatalogue,
   getCategories,
@@ -506,4 +512,82 @@ export async function restoreSwatchAction(formData: FormData): Promise<void> {
   revalidateStorefront();
 
   redirect("/admin/colours?restored=1");
+}
+
+
+/* -------------------------------------------------------------------------- */
+/*  Orders                                                                    */
+/* -------------------------------------------------------------------------- */
+
+export async function updateOrderStatusAction(
+  _previous: OrderStatusState,
+  formData: FormData,
+): Promise<OrderStatusState> {
+  await requireAdmin();
+
+  const number = formData.get("number");
+  const status = formData.get("status");
+
+  if (typeof number !== "string" || !number || !isOrderStatus(status)) {
+    return { message: "That is not a status we know." };
+  }
+
+  if (!(await setOrderStatus(number, status))) {
+    return { message: "That order is no longer here." };
+  }
+
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${number}`);
+  /* The customer sees the same status on their own order and in their history. */
+  revalidatePath(`/order/${number}`);
+  revalidatePath("/account");
+
+  return {
+    status,
+    message: `Marked ${statusLabels[status].toLowerCase()}.`,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Database                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Copies the seed catalogue — and anything the dashboard has already saved to
+ * `data/*.json` — into Supabase.
+ *
+ * Safe to run more than once: every row is inserted only if its id is not
+ * already there, so a second run adds what is missing and touches nothing an
+ * operator has edited since.
+ */
+export async function importSeedDataAction(): Promise<ImportState> {
+  await requireAdmin();
+
+  if (!isSupabaseConfigured()) {
+    return {
+      status: "error",
+      message: "Supabase is not configured, so there is nothing to import into.",
+    };
+  }
+
+  try {
+    const counts = await importSeedData();
+    revalidateStorefront();
+    revalidatePath("/admin/database");
+
+    return {
+      status: "done",
+      message: "Imported.",
+      counts,
+    };
+  } catch (cause) {
+    console.error("Import failed", cause);
+    return {
+      status: "error",
+      message:
+        cause instanceof Error
+          ? cause.message
+          : "The import failed. Check the server log.",
+    };
+  }
 }

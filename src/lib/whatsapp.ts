@@ -10,8 +10,11 @@ export function whatsappLink(options?: {
   variantLabel?: string;
   quantity?: number;
   message?: string;
+  /** Who to message. Defaults to the store — the dashboard passes a customer. */
+  phone?: string;
 }) {
-  const base = `https://wa.me/${site.whatsapp.number}`;
+  const number = (options?.phone ?? site.whatsapp.number).replace(/[^\d]/g, "");
+  const base = `https://wa.me/${number}`;
 
   if (options?.message) {
     return `${base}?text=${encodeURIComponent(options.message)}`;

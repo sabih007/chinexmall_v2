@@ -29,6 +29,11 @@ export { bankAccount, deliveryMethods, paymentMethods, provinces };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+/** The one email test the app uses — the checkout and account sign-up share it. */
+export function isEmailAddress(value: string): boolean {
+  return EMAIL.test(value);
+}
+
 export const emptyCustomer: CustomerDetails = {
   firstName: "",
   lastName: "",
@@ -121,7 +126,7 @@ export function validateCustomer(customer: CustomerDetails): CustomerErrors {
   else if (!normalisePhone(trimmed("phone")))
     errors.phone = "Enter a valid mobile number, e.g. 0300 1234567.";
 
-  if (trimmed("email") && !EMAIL.test(trimmed("email")))
+  if (trimmed("email") && !isEmailAddress(trimmed("email")))
     errors.email = "That email address does not look right.";
 
   if (trimmed("address1").length < 6)
