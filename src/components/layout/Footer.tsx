@@ -1,20 +1,23 @@
 import { Mail, MapPin, PhoneCall } from "lucide-react";
 import Link from "next/link";
 import { NewsletterForm } from "@/components/home/Newsletter";
+import { Logo } from "@/components/layout/Logo";
 import { Container } from "@/components/ui/Primitives";
 import { footerNav, legalNav, site, socials } from "@/lib/site";
 
-/** Full-bleed purple footer, the design's closing block. */
+/** Full-bleed navy footer, the design's closing block. */
 export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-brand text-paper">
+    <footer className="bg-brand-deep text-paper">
       <Container>
         <div className="grid gap-12 py-16 md:grid-cols-12 md:py-20">
           {/* Brand + contact */}
           <div className="md:col-span-5 lg:col-span-4">
-            <p className="display text-[26px] font-bold">{site.name}</p>
+            <Link href="/" aria-label={`${site.name} home`} className="inline-block">
+              <Logo variant="white" className="h-9" />
+            </Link>
             <p className="mt-4 max-w-sm text-[13px] leading-relaxed text-paper/70">
               {site.description}
             </p>

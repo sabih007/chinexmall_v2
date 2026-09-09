@@ -4,9 +4,10 @@ import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Logo } from "@/components/layout/Logo";
 import { useStore } from "@/components/providers/StoreProvider";
 import { Drawer } from "@/components/ui/Drawer";
-import { legalNav, primaryNav, site, socials } from "@/lib/site";
+import { legalNav, primaryNav, socials } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /** Slide-in navigation for mobile (spec §10). */
@@ -27,8 +28,8 @@ export function MobileNav() {
       side="left"
       labelledBy="mobile-nav-title"
       headerSlot={
-        <span id="mobile-nav-title" className="display text-[17px] font-bold">
-          {site.name}
+        <span id="mobile-nav-title" className="flex items-center">
+          <Logo className="h-6" />
         </span>
       }
       footer={

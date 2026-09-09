@@ -41,7 +41,8 @@ src/
 │
 ├── components/
 │   ├── admin/                    AdminNav · Fields · ProductForm ·
-│   │                             ImageManager · CouponForm
+│   │                             ImageManager · CouponForm · CategoryForm ·
+│   │                             TagRow · SwatchRow · ConfirmSubmit
 │   ├── layout/                   AnnouncementBar · Header · MobileNav · BottomNav ·
 │   │                             Footer · StorefrontShell
 │   ├── home/                     Hero · CategoryGrid · ProductSections · PromoBanner ·
@@ -58,14 +59,16 @@ src/
 │   ├── common/                   Reveal · Breadcrumbs · WhatsAppFloat
 │   └── providers/                StoreProvider (cart + wishlist + overlay state)
 │
-├── data/                         products.ts · categories.ts · reviews.ts ·
-│                                 looks.ts · swatches.ts
+├── data/                         Seed catalogue — the dashboard overlays it:
+│                                 products.ts · categories.ts · swatches.ts ·
+│                                 reviews.ts · looks.ts
 └── lib/                          repository.ts · types.ts · site.ts · format.ts ·
     │                             cart.ts · orders.ts · coupons.ts · pricing.ts ·
     │                             images.ts · whatsapp.ts · utils.ts
     └── admin/                    auth.ts · session.ts · json-store.ts ·
-                                  store.ts · coupons-store.ts ·
-                                  product-form.ts · coupon-form.ts ·
+                                  store.ts · taxonomy-store.ts ·
+                                  coupons-store.ts · product-form.ts ·
+                                  category-form.ts · coupon-form.ts ·
                                   uploads.ts · form-state.ts
 ```
 
@@ -84,8 +87,10 @@ src/
 | Bank transfer account details | `src/lib/site.ts` → `bankAccount` |
 | Navigation and footer links | `src/lib/site.ts` |
 | Colours, fonts, radii | `src/app/globals.css` (`@theme` block) |
+| Logo artwork | `public/logo.png`, `public/logo-white.png`, `public/logo-mark.png` — rendered by `src/components/layout/Logo.tsx` |
+| Favicon, app icon, share image | `src/app/favicon.ico`, `icon.png`, `apple-icon.png`, `opengraph-image.png` |
 | Products | The `/admin` dashboard, or `src/data/products.ts` for the seed |
-| Categories | `src/data/categories.ts` |
+| Categories, tags, colours | The `/admin` dashboard, or `src/data/` for the seed |
 | Canonical domain | `NEXT_PUBLIC_SITE_URL` env var |
 | Dashboard password | `ADMIN_PASSWORD` env var — see [The dashboard](#the-dashboard) |
 
@@ -114,7 +119,8 @@ src/
 ## The dashboard
 
 `/admin` is a small back office: add a product, edit or remove one, see what
-needs restocking, and issue coupon codes. Anything saved is live on the
+needs restocking, issue coupon codes, and shape how the catalogue is organised
+— categories, tags and the colour palette. Anything saved is live on the
 storefront immediately.
 
 ### Setting it up
@@ -139,6 +145,7 @@ it never falls back to a default password.
 | What | Where | Notes |
 | --- | --- | --- |
 | Products added or edited | `data/catalogue.json` | Created on first save |
+| Categories, tags and colours | `data/taxonomy.json` | Created on first save |
 | Coupons and their redemption counts | `data/coupons.json` | Created on first save |
 | Uploaded photos | `public/uploads/` | Served straight off the origin |
 
@@ -158,6 +165,34 @@ Both paths are ordinary files, which means:
   return the same shapes, so no page or component changes.
 - They are **your content**, so they are not git-ignored. Commit them if you
   deploy by pushing, and include them in whatever you back up.
+
+### Categories, tags and colours
+
+Three pages under **Catalogue** in the sidebar decide how the shop is organised.
+Categories and colours ship with the store and are overlaid exactly like
+products — edits shadow the seed, removals are recoverable, additions are
+appended.
+
+**Categories** (`/admin/categories`) drive the menu, the homepage grid, the
+filters and the sitemap. Each has a name, web address, tagline, description, a
+card image and a wider banner, a position, and a "feature on the homepage"
+switch. A category can only be removed once nothing is filed under it — the
+list hides the button while products remain, and the action refuses it too, so
+no product is ever stranded on a page that 404s.
+
+**Tags** (`/admin/tags`) are editorial labels that cut across categories:
+"gift idea", "under 2000", "new in". Create them here, apply them from the
+product form, and shoppers filter by them in the shop and reach them from chips
+on the product page. Renaming a tag changes only its display name — products
+store the slug, so `/shop?tag=gift-idea` links you have already shared keep
+working. Deleting one also takes it off every product carrying it.
+
+**Colours** (`/admin/colours`) is the store's palette — the swatches on
+product options and the colours shoppers filter by. Add a colour with a name
+and a hex value, or re-point an existing one; every product using that colour
+by name picks the change up. Names are the key products store, so they are
+fixed once created. Removing a colour leaves products that reference it
+working — they simply lose the swatch dot.
 
 ### Coupons
 
@@ -222,6 +257,7 @@ getRelatedProducts(product)
 getRecommendations(exclude) // cart drawer cross-sell
 getCategories() / getCategoryBySlug() / getCategoryCounts()
 getFacets(scope)            // filter panel values + counts
+getTags() / getSwatches()      // dashboard-managed taxonomy
 getCoupons() / getCouponByCode(code)
 getReviews() / getReviewsForProduct()
 getLooks() / getLookProducts() / getSocialPosts()

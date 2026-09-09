@@ -17,7 +17,7 @@ export function NewsletterForm({
 }: {
   /** Footer sizing: one line, no supporting copy above it. */
   compact?: boolean;
-  /** Sitting on the purple footer rather than a light section. */
+  /** Sitting on the navy footer rather than a light section. */
   invert?: boolean;
 }) {
   const [email, setEmail] = useState("");

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
+import { Logo } from "@/components/layout/Logo";
 import { isAdminConfigured } from "@/lib/admin/auth";
 import { site } from "@/lib/site";
 
@@ -21,12 +22,8 @@ export default async function AdminLoginPage({
     <div className="flex min-h-dvh items-center justify-center bg-sand px-5 py-16">
       <div className="w-full max-w-[380px]">
         <div className="mb-7 text-center">
-          <Link href="/" className="display text-[22px] font-bold">
-            {site.name.split(/(?=[A-Z])/).map((part, index) => (
-              <span key={part} className={index > 0 ? "text-brand" : undefined}>
-                {part}
-              </span>
-            ))}
+          <Link href="/" className="inline-block" aria-label={`${site.name} home`}>
+            <Logo className="mx-auto h-8" priority />
           </Link>
           <p className="mt-2 text-[13px] text-muted">Store dashboard</p>
         </div>

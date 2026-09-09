@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Logo } from "@/components/layout/Logo";
 import { useStore } from "@/components/providers/StoreProvider";
 import { Container } from "@/components/ui/Primitives";
 import { categoryNav, primaryNav, site } from "@/lib/site";
@@ -88,7 +89,13 @@ export function Header() {
             className="shrink-0"
             aria-label={`${site.name} home`}
           >
-            <Wordmark condensed={condensed} />
+            <Logo
+              priority
+              className={cn(
+                "transition-[height] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                condensed ? "h-6 lg:h-7" : "h-7 lg:h-9",
+              )}
+            />
           </Link>
 
           {/* Category picker + search — the design's centrepiece */}
@@ -311,26 +318,7 @@ export function Header() {
   );
 }
 
-/**
- * Two-tone wordmark: the design's own logo is a script, which suits a grocer
- * more than a gadget shop — the weight change carries the same idea.
- */
-function Wordmark({ condensed }: { condensed: boolean }) {
-  const [first, ...rest] = site.name.split(/(?=[A-Z])/);
-  return (
-    <span
-      className={cn(
-        "display whitespace-nowrap font-bold transition-all duration-500",
-        condensed ? "text-[19px]" : "text-[22px]",
-      )}
-    >
-      {first}
-      <span className="text-brand">{rest.join("")}</span>
-    </span>
-  );
-}
-
-/** Gold count bubble on the wishlist and basket icons. */
+/** Orange count bubble on the wishlist and basket icons. */
 function CountBubble({ value }: { value: number }) {
   if (value <= 0) return null;
   return (

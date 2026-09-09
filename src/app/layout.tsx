@@ -48,7 +48,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#5b45a3",
+  /* The navy of the wordmark — what the browser chrome tints itself with. */
+  themeColor: "#002870",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -62,6 +63,7 @@ export default function RootLayout({
     "@type": "OnlineStore",
     name: site.legalName,
     url: site.url,
+    logo: `${site.url}/logo.png`,
     description: site.description,
     email: site.email,
     telephone: site.phone,

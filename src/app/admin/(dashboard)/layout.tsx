@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { logoutAction } from "@/app/admin/actions";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { Logo } from "@/components/layout/Logo";
 import { requireAdmin } from "@/lib/admin/session";
 import { site } from "@/lib/site";
 
@@ -30,12 +31,8 @@ export default async function DashboardLayout({
     <div className="min-h-dvh bg-sand">
       <aside className="border-b border-line bg-paper lg:fixed lg:inset-y-0 lg:left-0 lg:w-[248px] lg:border-b-0 lg:border-r">
         <div className="flex items-center gap-4 px-5 py-4 lg:flex-col lg:items-stretch lg:gap-6 lg:px-4 lg:py-6">
-          <Link href="/admin" className="display shrink-0 text-[18px] font-bold">
-            {site.name.split(/(?=[A-Z])/).map((part, index) => (
-              <span key={part} className={index > 0 ? "text-brand" : undefined}>
-                {part}
-              </span>
-            ))}
+          <Link href="/admin" className="shrink-0" aria-label={`${site.name} dashboard`}>
+            <Logo className="h-7" priority />
           </Link>
 
           <div className="flex-1 overflow-x-auto no-scrollbar lg:flex-none lg:overflow-visible">
