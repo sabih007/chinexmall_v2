@@ -43,6 +43,7 @@ import {
 } from "@/lib/admin/session";
 import {
   deleteProduct,
+  deleteProducts,
   newProductId,
   restoreProduct,
   saveProduct,
@@ -225,6 +226,27 @@ export async function deleteProductAction(formData: FormData): Promise<void> {
   revalidateStorefront();
 
   redirect("/admin/products?removed=1");
+}
+
+/** Removes every product ticked in the list — one `productId` field each. */
+export async function deleteProductsAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+
+  const ids = [
+    ...new Set(
+      formData
+        .getAll("productId")
+        .filter((id): id is string => typeof id === "string" && id !== ""),
+    ),
+  ];
+  if (ids.length === 0) return;
+
+  await deleteProducts(ids, {
+    seedIds: new Set(ids.filter((id) => isSeedProduct(id))),
+  });
+  revalidateStorefront();
+
+  redirect(`/admin/products?removed=${ids.length}`);
 }
 
 export async function restoreProductAction(formData: FormData): Promise<void> {

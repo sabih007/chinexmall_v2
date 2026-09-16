@@ -2,6 +2,11 @@ import { CheckCircle2, PackagePlus, Pencil, Search } from "lucide-react";
 import Link from "next/link";
 import { restoreProductAction } from "@/app/admin/actions";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
+import {
+  BulkDeleteBar,
+  ProductSelection,
+  SelectProduct,
+} from "@/components/admin/ProductSelection";
 import { discountPercent, formatPrice } from "@/lib/format";
 import {
   getCatalogue,
@@ -77,7 +82,10 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
               </Link>
             </>
           )}
-          {removed && "Product removed from the storefront."}
+          {removed &&
+            (Number(removed) > 1
+              ? `${removed} products removed from the storefront.`
+              : "Product removed from the storefront.")}
           {restored && "Product restored."}
         </p>
       )}
@@ -106,76 +114,84 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
           No products match that search.
         </p>
       ) : (
-        <ul className="overflow-hidden rounded-tile border border-line bg-paper shadow-card">
-          {visible.map((product) => {
-            const discount = discountPercent(
-              product.price,
-              product.compareAtPrice,
-            );
+        <ProductSelection ids={visible.map((product) => product.id)}>
+          <div className="flex flex-col gap-3">
+            <BulkDeleteBar />
 
-            return (
-              <li
-                key={product.id}
-                className="flex items-center gap-4 border-b border-line px-4 py-3 last:border-0 sm:px-5"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={product.thumbnail}
-                  alt=""
-                  className="h-12 w-12 shrink-0 rounded-[8px] border border-line object-cover"
-                />
+            <ul className="overflow-hidden rounded-tile border border-line bg-paper shadow-card">
+              {visible.map((product) => {
+                const discount = discountPercent(
+                  product.price,
+                  product.compareAtPrice,
+                );
 
-                <div className="min-w-0 flex-1">
-                  <Link
-                    href={`/admin/products/${product.id}`}
-                    className="block truncate text-[13.5px] font-medium hover:text-brand"
+                return (
+                  <li
+                    key={product.id}
+                    className="flex items-center gap-4 border-b border-line px-4 py-3 last:border-0 sm:px-5"
                   >
-                    {product.name}
-                  </Link>
-                  <p className="mt-0.5 truncate text-[12px] text-muted">
-                    {categoryName(product.category)} · {product.sku}
-                    {!isSeedProduct(product.id) && " · added here"}
-                  </p>
-                </div>
+                    <SelectProduct id={product.id} name={product.name} />
 
-                <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
-                  {product.featured && <Flag label="Featured" />}
-                  {product.bestSeller && <Flag label="Best seller" />}
-                  {product.newArrival && <Flag label="New" />}
-                  {discount > 0 && <Flag label={`${discount}% off`} tone="sale" />}
-                </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={product.thumbnail}
+                      alt=""
+                      className="h-12 w-12 shrink-0 rounded-[8px] border border-line object-cover"
+                    />
 
-                <div className="w-20 shrink-0 text-right">
-                  <p className="text-[13px] font-medium tabular-nums">
-                    {formatPrice(product.price)}
-                  </p>
-                  <p
-                    className={`text-[11.5px] tabular-nums ${
-                      product.stock <= 0 ? "text-accent" : "text-muted"
-                    }`}
-                  >
-                    {product.stock <= 0 ? "Sold out" : `${product.stock} in stock`}
-                  </p>
-                </div>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/admin/products/${product.id}`}
+                        className="block truncate text-[13.5px] font-medium hover:text-brand"
+                      >
+                        {product.name}
+                      </Link>
+                      <p className="mt-0.5 truncate text-[12px] text-muted">
+                        {categoryName(product.category)} · {product.sku}
+                        {!isSeedProduct(product.id) && " · added here"}
+                      </p>
+                    </div>
 
-                <div className="flex shrink-0 items-center gap-0.5">
-                  <Link
-                    href={`/admin/products/${product.id}`}
-                    aria-label={`Edit ${product.name}`}
-                    title={`Edit ${product.name}`}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-sand hover:text-ink"
-                  >
-                    <Pencil size={15} strokeWidth={1.7} />
-                  </Link>
-                  <DeleteProductButton
-                    productId={product.id}
-                    name={product.name}
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                    <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
+                      {product.featured && <Flag label="Featured" />}
+                      {product.bestSeller && <Flag label="Best seller" />}
+                      {product.newArrival && <Flag label="New" />}
+                      {discount > 0 && <Flag label={`${discount}% off`} tone="sale" />}
+                    </div>
+
+                    <div className="w-20 shrink-0 text-right">
+                      <p className="text-[13px] font-medium tabular-nums">
+                        {formatPrice(product.price)}
+                      </p>
+                      <p
+                        className={`text-[11.5px] tabular-nums ${
+                          product.stock <= 0 ? "text-accent" : "text-muted"
+                        }`}
+                      >
+                        {product.stock <= 0 ? "Sold out" : `${product.stock} in stock`}
+                      </p>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <Link
+                        href={`/admin/products/${product.id}`}
+                        aria-label={`Edit ${product.name}`}
+                        title={`Edit ${product.name}`}
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-sand hover:text-ink"
+                      >
+                        <Pencil size={15} strokeWidth={1.7} />
+                      </Link>
+                      <DeleteProductButton
+                        productId={product.id}
+                        name={product.name}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </ProductSelection>
       )}
 
       {removedSeed.length > 0 && (

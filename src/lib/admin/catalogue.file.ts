@@ -127,6 +127,24 @@ export async function deleteProduct(
   });
 }
 
+/** `deleteProduct` for many ids at once, in a single write. */
+export async function deleteProducts(
+  ids: string[],
+  { seedIds }: { seedIds: Set<string> },
+): Promise<void> {
+  if (ids.length === 0) return;
+
+  await store.mutate((overlay) => {
+    for (const id of ids) {
+      delete overlay.products[id];
+      if (seedIds.has(id) && !overlay.deleted.includes(id)) {
+        overlay.deleted.push(id);
+      }
+    }
+    overlay.updatedAt = new Date().toISOString();
+  });
+}
+
 /**
  * Removes a tag from every product carrying it, so deleting a tag cannot leave
  * products pointing at a label that no longer exists. Returns how many changed.

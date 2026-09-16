@@ -47,6 +47,14 @@ export function deleteProduct(
   return backend().deleteProduct(id, options);
 }
 
+/** `deleteProduct` for a selection; `seedIds` says which to tombstone. */
+export function deleteProducts(
+  ids: string[],
+  options: { seedIds: Set<string> },
+): Promise<void> {
+  return backend().deleteProducts(ids, options);
+}
+
 export function restoreProduct(id: string): Promise<void> {
   return backend().restoreProduct(id);
 }

@@ -71,6 +71,29 @@ export async function deleteProduct(
   ensure(error);
 }
 
+/** `deleteProduct` for many ids at once: one soft-delete, one hard delete. */
+export async function deleteProducts(
+  ids: string[],
+  { seedIds }: { seedIds: Set<string> },
+): Promise<void> {
+  const db = requireSupabase();
+  const seed = ids.filter((id) => seedIds.has(id));
+  const authored = ids.filter((id) => !seedIds.has(id));
+
+  if (seed.length > 0) {
+    const { error } = await db
+      .from(TABLE)
+      .update({ deleted_at: new Date().toISOString() })
+      .in("id", seed);
+    ensure(error);
+  }
+
+  if (authored.length > 0) {
+    const { error } = await db.from(TABLE).delete().in("id", authored);
+    ensure(error);
+  }
+}
+
 export async function restoreProduct(id: string): Promise<void> {
   const { error } = await requireSupabase()
     .from(TABLE)
