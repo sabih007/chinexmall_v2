@@ -61,7 +61,13 @@ import {
   saveSwatch,
   saveTag,
 } from "@/lib/admin/taxonomy-store";
-import { UploadError, saveUploadedImages } from "@/lib/admin/uploads";
+import {
+  type DirectUpload,
+  UploadError,
+  type UploadRequest,
+  createDirectUploads,
+  saveUploadedImages,
+} from "@/lib/admin/uploads";
 import { importSeedData } from "@/lib/admin/import";
 import { isOrderStatus, statusLabels } from "@/lib/order-status";
 import { setOrderStatus } from "@/lib/order-store";
@@ -127,6 +133,50 @@ export async function logoutAction(): Promise<void> {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Photo uploads                                                             */
+/* -------------------------------------------------------------------------- */
+
+export type DirectUploadState =
+  /** Send each file to its signed URL, then submit the public URLs. */
+  | { status: "direct"; uploads: DirectUpload[] }
+  /** No Storage bucket: leave the files in the form. */
+  | { status: "form" }
+  | { status: "error"; message: string };
+
+/**
+ * Called by the forms before they submit, so photos go straight from the
+ * browser to Storage instead of through the Server Action body (see
+ * `uploads.ts` for why). Nothing is written here; each URL is good for one
+ * object, and the file is only checked by name, type and size.
+ */
+export async function createDirectUploadsAction(
+  files: UploadRequest[],
+): Promise<DirectUploadState> {
+  await requireAdmin();
+
+  const wanted = (Array.isArray(files) ? files : [])
+    .slice(0, MAX_IMAGES)
+    .map((file) => ({
+      name: typeof file?.name === "string" ? file.name : "",
+      type: typeof file?.type === "string" ? file.type : "",
+      size: typeof file?.size === "number" ? file.size : Number.POSITIVE_INFINITY,
+    }));
+
+  try {
+    const uploads = await createDirectUploads(wanted);
+    return uploads ? { status: "direct", uploads } : { status: "form" };
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof UploadError
+          ? error.message
+          : "Those photos could not be uploaded.",
+    };
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Products                                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -158,9 +208,7 @@ export async function saveProductAction(
 
   let uploaded: string[] = [];
   try {
-    uploaded = await saveUploadedImages(
-      formData.getAll("photos").filter((v): v is File => v instanceof File),
-    );
+    uploaded = await saveUploadedImages(formData.getAll("photos"));
   } catch (error) {
     return {
       status: "error",
@@ -354,12 +402,8 @@ export async function saveCategoryAction(
   let hero: string[] = [];
   try {
     [card, hero] = await Promise.all([
-      saveUploadedImages(
-        formData.getAll("imageFile").filter((v): v is File => v instanceof File),
-      ),
-      saveUploadedImages(
-        formData.getAll("heroFile").filter((v): v is File => v instanceof File),
-      ),
+      saveUploadedImages(formData.getAll("imageFile")),
+      saveUploadedImages(formData.getAll("heroFile")),
     ]);
   } catch (error) {
     return {

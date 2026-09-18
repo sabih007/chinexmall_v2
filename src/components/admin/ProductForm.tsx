@@ -12,6 +12,7 @@ import {
   AdminTextarea,
 } from "@/components/admin/Fields";
 import { ImageManager } from "@/components/admin/ImageManager";
+import { useDirectUploads } from "@/components/admin/useDirectUploads";
 import { Button } from "@/components/ui/Button";
 import { saveProductAction } from "@/app/admin/actions";
 import { initialProductFormState } from "@/lib/admin/form-state";
@@ -57,11 +58,12 @@ export function ProductForm({
     saveProductAction,
     initialProductFormState,
   );
+  const uploads = useDirectUploads(formAction);
 
   // A rejected submission comes back with the values the server actually
-  // received — including URLs for photos it has already written to disk. Those
-  // become the fields' new starting point, and the changing key remounts them,
-  // which also empties the file input so nothing is uploaded twice.
+  // received — including URLs for photos it has already stored. Those become
+  // the fields' new starting point, and the changing key remounts them, which
+  // also empties the file input so nothing is uploaded twice.
   const echoed = state.status === "error" ? state.values : undefined;
 
   return (
@@ -70,9 +72,14 @@ export function ProductForm({
       productId={productId}
       initialValues={echoed ?? initialValues}
       initialErrors={state.status === "error" ? state.errors : undefined}
-      message={state.status === "error" ? state.message : undefined}
+      message={
+        uploads.error ??
+        (state.status === "error" ? state.message : undefined)
+      }
       formAction={formAction}
-      pending={pending}
+      onSubmit={(formData) => uploads.submit(formData, ["photos"])}
+      pending={pending || uploads.uploading}
+      pendingLabel={uploads.uploading ? "Uploading photos…" : "Saving…"}
       submitLabel={submitLabel}
       options={options}
     />
@@ -85,7 +92,9 @@ function ProductFormFields({
   initialErrors,
   message,
   formAction,
+  onSubmit,
   pending,
+  pendingLabel,
   submitLabel,
   options,
 }: {
@@ -93,8 +102,12 @@ function ProductFormFields({
   initialValues: ProductFormValues;
   initialErrors?: ProductFormErrors;
   message?: string;
+  /** What the form posts to without JavaScript. */
   formAction: (formData: FormData) => void;
+  /** The JavaScript path: photos go to Storage first, then `formAction`. */
+  onSubmit: (formData: FormData) => void;
   pending: boolean;
+  pendingLabel: string;
   submitLabel: string;
   options: ProductFormOptions;
 }) {
@@ -136,7 +149,14 @@ function ProductFormFields({
       : 0;
 
   return (
-    <form action={formAction} className="flex flex-col gap-5 pb-28">
+    <form
+      action={formAction}
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit(new FormData(event.currentTarget));
+      }}
+      className="flex flex-col gap-5 pb-28"
+    >
       {productId && <input type="hidden" name="productId" value={productId} />}
 
       {message && (
@@ -694,7 +714,7 @@ function ProductFormFields({
               ) : (
                 <Save size={15} strokeWidth={1.8} />
               )}
-              {pending ? "Saving…" : submitLabel}
+              {pending ? pendingLabel : submitLabel}
             </Button>
           </div>
         </div>

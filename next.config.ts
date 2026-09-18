@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion"],
+    serverActions: {
+      // Only matters without Supabase, when product photos travel inside the
+      // form to be written to public/uploads: 8 photos × 5 MB plus multipart
+      // overhead. With Supabase the browser uploads straight to Storage and
+      // the action sees URLs only — which is the only path that works on
+      // Vercel, whose 4.5 MB request cap no setting here can lift.
+      bodySizeLimit: "45mb",
+    },
   },
 };
 

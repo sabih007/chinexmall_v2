@@ -12,6 +12,7 @@ import {
   AdminTextarea,
 } from "@/components/admin/Fields";
 import { SingleImageField } from "@/components/admin/SingleImageField";
+import { useDirectUploads } from "@/components/admin/useDirectUploads";
 import { Button } from "@/components/ui/Button";
 import {
   emptyCategoryForm,
@@ -36,6 +37,7 @@ export function CategoryForm({
     saveCategoryAction,
     initialCategoryFormState,
   );
+  const uploads = useDirectUploads(formAction);
 
   const echoed = state.status === "error" ? state.values : undefined;
 
@@ -45,9 +47,16 @@ export function CategoryForm({
       categoryId={categoryId}
       initialValues={echoed ?? initialValues}
       initialErrors={state.status === "error" ? state.errors : undefined}
-      message={state.status === "error" ? state.message : undefined}
+      message={
+        uploads.error ??
+        (state.status === "error" ? state.message : undefined)
+      }
       formAction={formAction}
-      pending={pending}
+      onSubmit={(formData) =>
+        uploads.submit(formData, ["imageFile", "heroFile"])
+      }
+      pending={pending || uploads.uploading}
+      pendingLabel={uploads.uploading ? "Uploading images…" : "Saving…"}
       submitLabel={submitLabel}
     />
   );
@@ -59,15 +68,21 @@ function CategoryFormFields({
   initialErrors,
   message,
   formAction,
+  onSubmit,
   pending,
+  pendingLabel,
   submitLabel,
 }: {
   categoryId?: string;
   initialValues: CategoryFormValues;
   initialErrors?: CategoryFormErrors;
   message?: string;
+  /** What the form posts to without JavaScript. */
   formAction: (formData: FormData) => void;
+  /** The JavaScript path: images go to Storage first, then `formAction`. */
+  onSubmit: (formData: FormData) => void;
   pending: boolean;
+  pendingLabel: string;
   submitLabel: string;
 }) {
   const [values, setValues] = useState<CategoryFormValues>(initialValues);
@@ -85,7 +100,14 @@ function CategoryFormFields({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-5 pb-28">
+    <form
+      action={formAction}
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit(new FormData(event.currentTarget));
+      }}
+      className="flex flex-col gap-5 pb-28"
+    >
       {categoryId && (
         <input type="hidden" name="categoryId" value={categoryId} />
       )}
@@ -254,7 +276,7 @@ function CategoryFormFields({
               ) : (
                 <Save size={15} strokeWidth={1.8} />
               )}
-              {pending ? "Saving…" : submitLabel}
+              {pending ? pendingLabel : submitLabel}
             </Button>
           </div>
         </div>

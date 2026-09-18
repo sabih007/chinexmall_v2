@@ -10,8 +10,9 @@ import { ACCEPTED_IMAGE_TYPES } from "@/lib/admin/product-form";
  * One image: upload a file, or paste an address.
  *
  * The chosen URL rides in a hidden field so the Server Action reads it like any
- * other value; a freshly picked file is sent under `fileName` and its uploaded
- * URL replaces the hidden one server-side.
+ * other value; a freshly picked file sits under `fileName` until the form
+ * submits, when `useDirectUploads` turns it into an uploaded URL that replaces
+ * the hidden one server-side.
  */
 export function SingleImageField({
   label,

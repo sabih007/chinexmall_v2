@@ -14,10 +14,12 @@ import { cn } from "@/lib/utils";
 /**
  * The photo strip on the product form.
  *
- * Two ways in: choose files (uploaded by the Server Action, which is why the
- * file input keeps its own `photos` name) or paste a URL. Already-attached
- * photos ride along in a hidden `imageUrls` field, one per line, so the whole
- * gallery survives a rejected submission.
+ * Two ways in: choose files or paste a URL. Chosen files sit in the `photos`
+ * input until the form submits, when `useDirectUploads` sends them to Storage
+ * and swaps in their URLs (or, without Supabase, leaves them for the Server
+ * Action to write). Already-attached photos ride along in a hidden
+ * `imageUrls` field, one per line, so the whole gallery survives a rejected
+ * submission.
  *
  * The first photo is the one the product card and the cart use, hence the
  * reordering arrows rather than a plain delete list.
