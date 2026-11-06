@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { currentCustomer } from "@/lib/account/session";
 import { recordRedemption } from "@/lib/admin/coupons-store";
 import { saveOrder } from "@/lib/order-store";
@@ -15,6 +15,10 @@ import {
   emptyCustomer,
   type CustomerErrors,
 } from "@/lib/orders";
+import {
+  requestContext,
+  sendPurchaseEvent,
+} from "@/lib/meta-pixel/capi.server";
 import { priceBasket, readBasketItems } from "@/lib/pricing";
 import { getCouponByCode } from "@/lib/repository";
 import type {
@@ -155,6 +159,18 @@ export async function POST(request: Request) {
       500,
     );
   }
+
+  /* The Meta Pixel's server-side Purchase — sent only now, past every way
+     this request can still fail, so it reports nothing but a stored order.
+     `after` keeps it off the shopper's critical path: the confirmation renders
+     while this runs, and nothing it does can fail the order. Its event ID is
+     derived from the order number, which is also what the browser's Purchase
+     uses, so Meta counts the pair once. */
+  const meta = requestContext(request);
+  const accountId = account?.id ?? null;
+  after(async () => {
+    await sendPurchaseEvent(order, { ...meta, accountId });
+  });
 
   // TODO: decrement stock, and notify the store — order confirmation email to
   // `order.customer.email`, WhatsApp or SMS to `order.customer.phone`.

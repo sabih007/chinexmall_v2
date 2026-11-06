@@ -4,6 +4,7 @@ import { Check, MessageCircle, Package, Truck } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useSyncExternalStore, type ReactNode } from "react";
 import { orderKey } from "@/app/(storefront)/checkout/CheckoutClient";
+import { TrackPurchase } from "@/components/analytics/MetaEvents";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { ButtonLink } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Primitives";
@@ -76,6 +77,12 @@ export function OrderConfirmation({
 
   return (
     <div className="grid gap-10 pb-24 lg:grid-cols-[1fr_400px] lg:gap-16">
+      {/* Meta Pixel Purchase. Reached only once an order the server created
+          and stored is in hand, and keyed on the order number, so a refresh
+          or a back-navigation cannot report a second conversion. Renders
+          nothing. */}
+      <TrackPurchase order={order} />
+
       <aside className="lg:order-2 lg:sticky lg:top-28 lg:self-start">
         <OrderSummary
           lines={order.lines.map((line, i) => ({

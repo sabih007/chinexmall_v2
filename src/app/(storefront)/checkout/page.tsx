@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TrackInitiateCheckout } from "@/components/analytics/MetaEvents";
 import { Container } from "@/components/ui/Primitives";
 import { currentCustomer } from "@/lib/account/session";
 import { CheckoutClient } from "./CheckoutClient";
@@ -17,6 +18,10 @@ export default async function CheckoutPage() {
 
   return (
     <Container>
+      {/* Meta Pixel InitiateCheckout, reported once the basket has hydrated.
+          Renders nothing and takes no part in placing the order. */}
+      <TrackInitiateCheckout />
+
       <div className="flex flex-wrap items-baseline justify-between gap-4 py-10 md:py-14">
         <h1 className="display text-[1.85rem] sm:text-[2.4rem]">
           Checkout

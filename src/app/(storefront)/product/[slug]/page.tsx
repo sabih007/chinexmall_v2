@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { TrackViewContent } from "@/components/analytics/MetaEvents";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { ProductDetail } from "@/components/products/ProductDetail";
 import { RelatedProducts } from "@/components/products/RelatedProducts";
@@ -115,6 +116,17 @@ export default async function ProductPage({ params }: PageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+      />
+
+      {/* Meta Pixel ViewContent. Renders nothing; only the four fields the
+          event needs cross to the browser. */}
+      <TrackViewContent
+        product={{
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          price: product.price,
+        }}
       />
 
       <Container>

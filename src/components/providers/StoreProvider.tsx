@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { defaultSelections, lineKey, resolveVariant } from "@/lib/cart";
+import { trackAddToCart } from "@/lib/meta-pixel/pixel";
 import type { CartLine, Product } from "@/lib/types";
 
 /* -------------------------------------------------------------------------- */
@@ -196,22 +197,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const { unitPrice, compareAtPrice, imageIndex, variantLabel } =
         resolveVariant(product, chosen);
 
-      dispatch({
-        type: "add",
-        line: {
-          key: lineKey(product.id, chosen),
-          productId: product.id,
-          slug: product.slug,
-          name: product.name,
-          image: product.images[imageIndex] ?? product.thumbnail,
-          unitPrice,
-          compareAtPrice,
-          quantity,
-          selections: chosen,
-          variantLabel,
-          maxQuantity: Math.max(product.stock, 1),
-        },
-      });
+      const line: CartLine = {
+        key: lineKey(product.id, chosen),
+        productId: product.id,
+        slug: product.slug,
+        name: product.name,
+        image: product.images[imageIndex] ?? product.thumbnail,
+        unitPrice,
+        compareAtPrice,
+        quantity,
+        selections: chosen,
+        variantLabel,
+        maxQuantity: Math.max(product.stock, 1),
+      };
+
+      dispatch({ type: "add", line });
+
+      /* Every "add to cart" in the store funnels through here — the product
+         page, a card, the cart's recommendations, the look board — so this is
+         the one place the event has to be reported from. It cannot throw. */
+      trackAddToCart(line, product.category);
+
       setMenuOpen(false);
       setSearchOpen(false);
       setCartOpen(true);

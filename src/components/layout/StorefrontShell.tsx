@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { WhatsAppFloat } from "@/components/common/WhatsAppFloat";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
@@ -15,7 +16,9 @@ import { SearchOverlay } from "@/components/search/SearchOverlay";
  *
  * It lives in a component rather than the root layout because the admin
  * dashboard shares the root layout but must not inherit any of this chrome.
- * The storefront route group and the global 404 both render it.
+ * The storefront route group and the global 404 both render it — which is
+ * also what scopes the Meta Pixel to shopper traffic and keeps it off the
+ * dashboard.
  */
 export function StorefrontShell({ children }: { children: ReactNode }) {
   return (
@@ -39,6 +42,8 @@ export function StorefrontShell({ children }: { children: ReactNode }) {
       <SearchOverlay />
       <BottomNav />
       <WhatsAppFloat />
+
+      <MetaPixel />
     </StoreProvider>
   );
 }
