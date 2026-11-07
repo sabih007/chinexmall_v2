@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { GoogleTagManager } from "@/components/analytics/GoogleTagManager";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { WhatsAppFloat } from "@/components/common/WhatsAppFloat";
@@ -44,6 +45,7 @@ export function StorefrontShell({ children }: { children: ReactNode }) {
       <WhatsAppFloat />
 
       <MetaPixel />
+      <GoogleTagManager />
     </StoreProvider>
   );
 }
