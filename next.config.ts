@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Nodemailer opens a raw TLS socket and resolves its transports at runtime,
+  // which the bundler cannot follow. It is not on Next's own auto-external
+  // list, so it is named here and loaded with a plain Node `require` instead.
+  serverExternalPackages: ["nodemailer"],
   images: {
     // Placeholder photography source. Replace with your own CDN / Supabase /
     // Shopify domain when real product photography is available.

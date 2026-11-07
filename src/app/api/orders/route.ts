@@ -20,6 +20,7 @@ import {
   sendPurchaseEvent,
 } from "@/lib/meta-pixel/capi.server";
 import { sendNewOrderAlert } from "@/lib/notify/order-alert.server";
+import { sendOrderEmails } from "@/lib/notify/order-email.server";
 import { priceBasket, readBasketItems } from "@/lib/pricing";
 import { getCouponByCode } from "@/lib/repository";
 import type {
@@ -170,17 +171,19 @@ export async function POST(request: Request) {
   const meta = requestContext(request);
   const accountId = account?.id ?? null;
   after(async () => {
-    /* Both of these report a stored order and neither may affect it. They run
+    /* All three report a stored order and none may affect it. They run
        independently so a Firebase outage cannot cost you a conversion event,
-       and a rejected pixel event cannot cost you the alert on your phone. */
+       a rejected pixel event cannot cost you the alert on your phone, and an
+       unreachable mail server costs you neither. */
     await Promise.allSettled([
       sendPurchaseEvent(order, { ...meta, accountId }),
       sendNewOrderAlert(order),
+      sendOrderEmails(order),
     ]);
   });
 
-  // TODO: decrement stock, and notify the customer — order confirmation email
-  // to `order.customer.email`, WhatsApp or SMS to `order.customer.phone`.
+  // TODO: decrement stock, and WhatsApp or SMS the customer on
+  // `order.customer.phone`.
 
   return NextResponse.json({ order }, { status: 201 });
 }
