@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "mail:check": "node scripts/check-mail.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
