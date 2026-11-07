@@ -19,6 +19,7 @@ import {
   requestContext,
   sendPurchaseEvent,
 } from "@/lib/meta-pixel/capi.server";
+import { sendNewOrderAlert } from "@/lib/notify/order-alert.server";
 import { priceBasket, readBasketItems } from "@/lib/pricing";
 import { getCouponByCode } from "@/lib/repository";
 import type {
@@ -160,20 +161,26 @@ export async function POST(request: Request) {
     );
   }
 
-  /* The Meta Pixel's server-side Purchase — sent only now, past every way
-     this request can still fail, so it reports nothing but a stored order.
-     `after` keeps it off the shopper's critical path: the confirmation renders
-     while this runs, and nothing it does can fail the order. Its event ID is
-     derived from the order number, which is also what the browser's Purchase
-     uses, so Meta counts the pair once. */
+  /* Everything that happens *because* an order exists — sent only now, past
+     every way this request can still fail, so nothing fires for an order that
+     was never stored. `after` keeps it off the shopper's critical path: the
+     confirmation renders while this runs, and nothing in here can fail the
+     order. The pixel's event ID is derived from the order number, which the
+     browser's Purchase uses too, so Meta counts the pair once. */
   const meta = requestContext(request);
   const accountId = account?.id ?? null;
   after(async () => {
-    await sendPurchaseEvent(order, { ...meta, accountId });
+    /* Both of these report a stored order and neither may affect it. They run
+       independently so a Firebase outage cannot cost you a conversion event,
+       and a rejected pixel event cannot cost you the alert on your phone. */
+    await Promise.allSettled([
+      sendPurchaseEvent(order, { ...meta, accountId }),
+      sendNewOrderAlert(order),
+    ]);
   });
 
-  // TODO: decrement stock, and notify the store — order confirmation email to
-  // `order.customer.email`, WhatsApp or SMS to `order.customer.phone`.
+  // TODO: decrement stock, and notify the customer — order confirmation email
+  // to `order.customer.email`, WhatsApp or SMS to `order.customer.phone`.
 
   return NextResponse.json({ order }, { status: 201 });
 }

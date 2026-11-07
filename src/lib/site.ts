@@ -22,11 +22,11 @@ export const site = {
   freeShippingThreshold: 3500,
   whatsapp: {
     /** International format, digits only. */
-    number: "923001234567",
-    display: "+92 300 123 4567",
+    number: "923009207890",
+    display: "+92 300 9207890",
   },
-  email: "hello@example.com",
-  phone: "+92 300 123 4567",
+  email: "info@chinexmall.com",
+  phone: "+92 300 9207890",
   address: "Main Boulevard, Gulberg III, Lahore, Pakistan",
   hours: "Mon – Sat, 10:00 – 19:00",
   /** Default shipping copy on a product page, unless a product overrides it. */
