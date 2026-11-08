@@ -21,5 +21,8 @@ export async function GET(request: Request) {
     limit,
   });
 
-  return NextResponse.json({ items, total });
+  return NextResponse.json({
+    items: items.map(({ id, slug, name, price, stock, thumbnail, shortDescription }) => ({ id, slug, name, price, stock, thumbnail, shortDescription })),
+    total,
+  });
 }

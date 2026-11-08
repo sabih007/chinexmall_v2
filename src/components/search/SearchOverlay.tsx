@@ -150,7 +150,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                   <button
                     type="button"
                     onClick={() => setQuery(suggestion)}
-                    className="rounded-full border border-line px-4 py-2 text-[12.5px] transition-colors hover:border-brand hover:bg-brand hover:text-paper"
+                    className="rounded-full border border-line px-4 py-2 text-[14px] transition-colors hover:border-brand hover:bg-brand hover:text-paper"
                   >
                     {suggestion}
                   </button>
@@ -159,11 +159,11 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
             </ul>
           </div>
         ) : isStale ? (
-          <p className="py-6 text-[13px] text-muted">Searching…</p>
+          <p className="py-6 text-[15px] text-muted">Searching…</p>
         ) : data.items.length === 0 ? (
           <div className="py-6">
-            <p className="text-[15px]">No matches for “{term}”.</p>
-            <p className="mt-1.5 text-[13px] text-muted">
+            <p className="text-[17px]">No matches for “{term}”.</p>
+            <p className="mt-1.5 text-[15px] text-muted">
               Try a broader term, or{" "}
               <Link
                 href="/shop"
@@ -198,13 +198,13 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium">
+                      <p className="truncate text-[15px] font-medium">
                         {product.name}
                       </p>
-                      <p className="truncate text-[12px] text-muted">
+                      <p className="truncate text-[14px] text-muted">
                         {product.shortDescription}
                       </p>
-                      <p className="mt-0.5 text-[12.5px] font-semibold tabular-nums">
+                      <p className="mt-0.5 text-[14px] font-semibold tabular-nums">
                         {formatPrice(product.price)}
                       </p>
                     </div>
@@ -216,7 +216,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={() => submit(query)}
-              className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-[12.5px] font-medium text-paper transition-colors hover:bg-brand-hover"
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-[14px] font-medium text-paper transition-colors hover:bg-brand-hover"
             >
               View all results
               <ArrowUpRight size={14} strokeWidth={1.8} />

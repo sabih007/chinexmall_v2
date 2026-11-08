@@ -33,9 +33,9 @@ export function ProductVariants({
         return (
           <fieldset key={option.id}>
             <legend className="mb-3 flex w-full items-baseline justify-between gap-3">
-              <span className="text-[13px] font-semibold">{option.name}</span>
+              <span className="text-[15px] font-semibold">{option.name}</span>
               {selected && (
-                <span className="text-[12px] text-muted">{selected.label}</span>
+                <span className="text-[14px] text-muted">{selected.label}</span>
               )}
             </legend>
 
@@ -89,7 +89,7 @@ export function ProductVariants({
                       onClick={() => onChange(option.id, value.value)}
                       aria-pressed={active}
                       className={cn(
-                        "min-w-[3.25rem] rounded-full border px-4 py-2.5 text-[12.5px] transition-all duration-300",
+                        "min-w-[3.25rem] rounded-full border px-4 py-2.5 text-[14px] transition-all duration-300",
                         active
                           ? "border-brand bg-brand text-paper"
                           : "border-line hover:border-brand hover:text-brand",
@@ -101,7 +101,7 @@ export function ProductVariants({
                       {value.priceDelta ? (
                         <span
                           className={cn(
-                            "ml-1.5 text-[11px]",
+                            "ml-1.5 text-[13px]",
                             active ? "text-paper/60" : "text-muted",
                           )}
                         >

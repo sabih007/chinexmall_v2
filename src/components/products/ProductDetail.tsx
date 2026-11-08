@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, MessageCircle, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { ArrowRight, Heart, MessageCircle, Truck, RotateCcw, ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -97,10 +97,10 @@ export function ProductDetail({ product }: { product: Product }) {
             </span>
             {discount > 0 && resolved.compareAtPrice && (
               <>
-                <span className="text-[15px] text-muted line-through tabular-nums">
+                <span className="text-[17px] text-muted line-through tabular-nums">
                   {formatPrice(resolved.compareAtPrice)}
                 </span>
-                <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[12.5px] font-semibold text-accent">
+                <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[14px] font-semibold text-accent">
                   Save{" "}
                   {formatPrice(resolved.compareAtPrice - resolved.unitPrice)}
                 </span>
@@ -123,7 +123,7 @@ export function ProductDetail({ product }: { product: Product }) {
             <Link href="/policies/refund" className="mt-2 inline-block text-brand underline underline-offset-4">7-day returns · See conditions</Link>
           </div>
 
-          <p className="mt-6 text-[14.5px] leading-relaxed text-muted">
+          <p className="mt-6 text-[16px] leading-relaxed text-muted">
             {product.description}
           </p>
 
@@ -145,7 +145,7 @@ export function ProductDetail({ product }: { product: Product }) {
             />
             <span
               className={cn(
-                "text-[12px]",
+                "text-[14px]",
                 soldOut ? "text-muted" : lowStock ? "text-accent" : "text-muted",
               )}
             >
@@ -187,11 +187,13 @@ export function ProductDetail({ product }: { product: Product }) {
             <Button
               onClick={buyNow}
               disabled={soldOut}
-              variant="secondary"
+              variant="gold"
               size="lg"
               full
+              className="group h-14 justify-between border border-gold-hover/30 px-5 font-semibold text-ink shadow-[0_6px_20px_-8px_rgba(248,168,16,0.65)] hover:shadow-[0_8px_24px_-8px_rgba(248,168,16,0.8)]"
             >
-              Buy now
+              <span className="flex items-center gap-2"><Zap size={18} strokeWidth={1.8} />Buy now</span>
+              <ArrowRight size={18} className="transition-transform motion-safe:group-hover:translate-x-1" />
             </Button>
 
             <a
@@ -202,7 +204,7 @@ export function ProductDetail({ product }: { product: Product }) {
               })}
               target="_blank"
               rel="noreferrer noopener"
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-mint text-[13px] font-medium text-mint-ink transition-colors hover:bg-mint-deep"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-mint text-[15px] font-medium text-mint-ink transition-colors hover:bg-mint-deep"
             >
               <MessageCircle size={15} strokeWidth={1.6} />
               Ask about this product
@@ -219,7 +221,7 @@ export function ProductDetail({ product }: { product: Product }) {
               },
               { icon: RotateCcw, text: "7-day easy returns" },
             ].map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3 text-[13px] text-muted">
+              <li key={text} className="flex items-center gap-3 text-[15px] text-muted">
                 <Icon size={16} strokeWidth={1.6} className="shrink-0 text-brand" />
                 {text}
               </li>
@@ -233,7 +235,7 @@ export function ProductDetail({ product }: { product: Product }) {
                 <li key={tag}>
                   <Link
                     href={`/shop?tag=${encodeURIComponent(tag)}`}
-                    className="inline-block rounded-full bg-sand px-3 py-1.5 text-[12px] text-ink-soft transition-colors hover:bg-sand-deep hover:text-ink"
+                    className="inline-block rounded-full bg-sand px-3 py-1.5 text-[14px] text-ink-soft transition-colors hover:bg-sand-deep hover:text-ink"
                   >
                     {tag.replace(/-/g, " ")}
                   </Link>
@@ -347,11 +349,11 @@ function StickyAddToCart({
     <div className="fixed inset-x-0 bottom-14 z-30 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur-xl lg:hidden">
       <div className="flex items-center gap-3">
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold tabular-nums">
+          <p className="text-[17px] font-semibold tabular-nums">
             {formatPrice(price)}
           </p>
           {compareAtPrice && compareAtPrice > price && (
-            <p className="text-[11.5px] text-muted line-through tabular-nums">
+            <p className="text-[13px] text-muted line-through tabular-nums">
               {formatPrice(compareAtPrice)}
             </p>
           )}

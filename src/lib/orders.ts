@@ -11,6 +11,7 @@ import {
   bankAccount,
   deliveryMethods,
   paymentMethods,
+  paymentMethodOptions,
   provinces,
   site,
   type DeliveryMethod,
@@ -56,7 +57,7 @@ export function deliveryMethod(id: DeliveryMethodId): DeliveryMethod {
 }
 
 export function paymentMethod(id: PaymentMethodId): PaymentMethod {
-  return paymentMethods.find((m) => m.id === id) ?? paymentMethods[0];
+  return paymentMethodOptions.find((m) => m.id === id) ?? paymentMethods[0];
 }
 
 export function isDeliveryMethodId(value: unknown): value is DeliveryMethodId {

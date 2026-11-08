@@ -1,15 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins } from "next/font/google";
+import { Afacad } from "next/font/google";
 import { site } from "@/lib/site";
 import "./globals.css";
 
-/* The reference uses a rounded geometric sans; Poppins is the closest match
-   available through next/font. */
-const poppins = Poppins({
+const afacad = Afacad({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "variable",
+  style: ["normal", "italic"],
   display: "swap",
-  variable: "--font-poppins",
+  variable: "--font-afacad",
 });
 
 export const metadata: Metadata = {
@@ -44,7 +43,6 @@ export const metadata: Metadata = {
     description: site.description,
   },
   robots: { index: true, follow: true },
-  alternates: { canonical: "/" },
 };
 
 export const viewport: Viewport = {
@@ -80,7 +78,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" className={poppins.variable}>
+    <html lang="en" className={afacad.variable}>
       <body className="min-h-dvh antialiased">
         <script
           type="application/ld+json"

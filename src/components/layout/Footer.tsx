@@ -19,11 +19,11 @@ export function Footer() {
             <Link href="/" aria-label={`${site.name} home`} className="inline-block">
               <Logo variant="white" className="h-9" />
             </Link>
-            <p className="mt-4 max-w-sm text-[13px] leading-relaxed text-paper/70">
+            <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-paper/70">
               {site.description}
             </p>
 
-            <ul className="mt-8 space-y-3 text-[13px] text-paper/85">
+            <ul className="mt-8 space-y-3 text-[15px] text-paper/85">
               <li className="flex items-center gap-3">
                 <Mail size={15} strokeWidth={1.7} className="shrink-0 text-paper/60" />
                 <a href={`mailto:${site.email}`} className="hover:text-paper">
@@ -42,7 +42,8 @@ export function Footer() {
               </li>
             </ul>
 
-            <p className="mt-8 text-[12px] text-paper/60">Follow us on social media</p>
+            {socials.length > 0 && <>
+            <p className="mt-8 text-[14px] text-paper/60">Follow us on social media</p>
             <ul className="mt-3 flex flex-wrap gap-2">
               {socials.map((s) => (
                 <li key={s.label}>
@@ -52,13 +53,14 @@ export function Footer() {
                     rel="noreferrer noopener"
                     aria-label={s.label}
                     title={s.label}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-paper text-[12px] font-semibold text-brand transition-transform duration-300 hover:-translate-y-0.5"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-paper text-[14px] font-semibold text-brand transition-transform duration-300 hover:-translate-y-0.5"
                   >
                     {s.label[0]}
                   </a>
                 </li>
               ))}
             </ul>
+            </>}
           </div>
 
           {/* Link columns */}
@@ -71,7 +73,7 @@ export function Footer() {
                     <li key={`${column.title}-${link.href}-${link.label}`}>
                       <Link
                         href={link.href}
-                        className="inline-block py-1 text-[13px] leading-relaxed text-paper/70 transition-colors hover:text-paper"
+                        className="inline-block py-1 text-[15px] leading-relaxed text-paper/70 transition-colors hover:text-paper"
                       >
                         {link.label}
                       </Link>
@@ -87,7 +89,7 @@ export function Footer() {
         <div className="grid gap-6 rounded-tile bg-paper/10 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
           <div>
             <p className="text-[17px] font-semibold">Get the weekly drop</p>
-            <p className="mt-1 text-[13px] text-paper/70">
+            <p className="mt-1 text-[15px] text-paper/70">
               New arrivals and member-only prices, once a week. No noise.
             </p>
           </div>
@@ -97,7 +99,7 @@ export function Footer() {
         </div>
 
         {/* Legal */}
-        <div className="mt-10 flex flex-col gap-4 border-t border-paper/15 py-7 text-[12px] text-paper/65 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-4 border-t border-paper/15 py-7 text-[14px] text-paper/65 sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {year} {site.legalName}. All rights reserved.
           </p>

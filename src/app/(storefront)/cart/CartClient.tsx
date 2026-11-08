@@ -2,6 +2,7 @@
 
 import { MessageCircle, ShoppingBag } from "lucide-react";
 import { CartItem } from "@/components/cart/CartDrawer";
+import { CartEstimate } from "@/components/cart/CartEstimate";
 import { useStore } from "@/components/providers/StoreProvider";
 import { ButtonLink } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Primitives";
@@ -29,8 +30,8 @@ export function CartClient() {
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand">
           <ShoppingBag size={22} strokeWidth={1.3} className="text-muted" />
         </div>
-        <p className="text-[15px] font-medium">Your cart is empty</p>
-        <p className="mx-auto mt-2 max-w-sm text-[13px] text-muted">
+        <p className="text-[17px] font-medium">Your cart is empty</p>
+        <p className="mx-auto mt-2 max-w-sm text-[15px] text-muted">
           There is something in here for everyone — start with what is new this
           week.
         </p>
@@ -72,11 +73,11 @@ export function CartClient() {
 
       <aside className="lg:sticky lg:top-28 lg:self-start">
         <div className="rounded-card border border-line p-6">
-          <h2 className="text-[14px] font-semibold">
+          <h2 className="text-[16px] font-semibold">
             Order summary
           </h2>
 
-          <dl className="mt-6 space-y-3 text-[13.5px]">
+          <dl className="mt-6 space-y-3 text-[15px]">
             <div className="flex justify-between">
               <dt className="text-muted">Subtotal</dt>
               <dd className="font-medium tabular-nums">
@@ -91,17 +92,11 @@ export function CartClient() {
                 </dd>
               </div>
             )}
-            <div className="flex justify-between">
-              <dt className="text-muted">Delivery</dt>
-              <dd className="tabular-nums">
-                {shipping.qualified ? "Free" : "Calculated at checkout"}
-              </dd>
-            </div>
           </dl>
 
           {!shipping.qualified && (
             <div className="mt-5 rounded-card bg-sand px-4 py-3">
-              <p className="text-[12px] text-ink/80">
+              <p className="text-[14px] text-ink/80">
                 Add{" "}
                 <strong className="font-semibold">
                   {formatPrice(shipping.remaining)}
@@ -117,14 +112,7 @@ export function CartClient() {
             </div>
           )}
 
-          <div className="mt-6 flex items-baseline justify-between border-t border-line pt-5">
-            <span className="text-[13.5px] font-semibold">
-              Total
-            </span>
-            <span className="text-[18px] font-semibold tabular-nums">
-              {formatPrice(subtotal)}
-            </span>
-          </div>
+          <div className="mt-6"><CartEstimate lines={lines} /></div>
 
           <ButtonLink href="/checkout" full size="lg" className="mt-6">
             Proceed to checkout
@@ -134,7 +122,7 @@ export function CartClient() {
             href={whatsappOrder}
             target="_blank"
             rel="noreferrer noopener"
-            className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-mint text-[13px] font-medium text-mint-ink transition-colors hover:bg-mint-deep"
+            className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-mint text-[15px] font-medium text-mint-ink transition-colors hover:bg-mint-deep"
           >
             <MessageCircle size={15} strokeWidth={1.6} />
             Order via WhatsApp
@@ -144,7 +132,7 @@ export function CartClient() {
             href="/shop"
             variant="link"
             full
-            className="mt-5 text-[12.5px] text-muted hover:text-brand"
+            className="mt-5 text-[14px] text-muted hover:text-brand"
           >
             Continue shopping
           </ButtonLink>

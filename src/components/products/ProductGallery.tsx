@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
+import { StoreImage as Image } from "@/components/common/StoreImage";
 import { useEffect, useRef, useState } from "react";
 import { BLUR_DATA_URL } from "@/lib/images";
 import { cn } from "@/lib/utils";

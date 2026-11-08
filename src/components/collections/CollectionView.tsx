@@ -143,8 +143,8 @@ export async function CollectionView({
           <div className="mt-8">
             {items.length === 0 ? (
               <div className="rounded-card border border-line px-6 py-16 text-center">
-                <p className="text-[15px]">{emptyMessage}</p>
-                <p className="mt-2 text-[13px] text-muted">
+                <p className="text-[17px]">{emptyMessage}</p>
+                <p className="mt-2 text-[15px] text-muted">
                   Try widening your filters, or browse the full catalogue.
                 </p>
                 <ButtonLink href="/shop" variant="secondary" className="mt-6">
@@ -168,8 +168,8 @@ export async function CollectionView({
                   aria-current={n === page ? "page" : undefined}
                   className={
                     n === page
-                      ? "flex h-9 min-w-9 items-center justify-center rounded-full bg-brand px-2 text-[12px] font-medium text-paper tabular-nums"
-                      : "flex h-9 min-w-9 items-center justify-center rounded-full border border-line px-2 text-[12px] tabular-nums transition-colors hover:border-brand hover:text-brand"
+                      ? "flex h-9 min-w-9 items-center justify-center rounded-full bg-brand px-2 text-[14px] font-medium text-paper tabular-nums"
+                      : "flex h-9 min-w-9 items-center justify-center rounded-full border border-line px-2 text-[14px] tabular-nums transition-colors hover:border-brand hover:text-brand"
                   }
                 >
                   {n}

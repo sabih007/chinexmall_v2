@@ -5,14 +5,14 @@ import { Container, Section, SectionHeading } from "@/components/ui/Primitives";
 import { getProducts } from "@/lib/repository";
 import type { ProductQuery } from "@/lib/types";
 
-function MoreLink({ href, label }: { href: string; label: string }) {
+function MoreLink({ href, label, empty = false }: { href: string; label: string; empty?: boolean }) {
   return (
     <Link
       href={href}
       aria-label={label}
       className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-brand/25 bg-paper px-6 py-2.5 text-sm font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft"
     >
-      Show more
+      {empty ? "Shop all products" : "Show more"}
       <ArrowRight
         size={14}
         strokeWidth={1.8}
@@ -48,7 +48,6 @@ async function ProductSection({
   id?: string;
 }) {
   const { items } = await getProducts({ ...query, limit: 5 });
-  if (items.length === 0) return null;
 
   return (
     <Section tone={tone} id={id}>
@@ -60,9 +59,15 @@ async function ProductSection({
         />
       </Container>
 
-      {layout === "grid" ? (
+      {items.length === 0 ? (
         <Container>
-          <ProductGrid products={items} columns={5} />
+          <div className="rounded-card border border-line bg-paper px-6 py-8 text-center text-sm leading-relaxed text-ink-soft">
+            No products are available in this collection right now. Explore the rest of our shop below.
+          </div>
+        </Container>
+      ) : layout === "grid" ? (
+        <Container>
+          <ProductGrid products={items} columns={5} mobileSlider />
         </Container>
       ) : (
         <Container>
@@ -71,7 +76,7 @@ async function ProductSection({
       )}
       <Container>
         <div className="mt-7 flex justify-center">
-          <MoreLink href={href} label={cta} />
+          <MoreLink href={items.length ? href : "/shop"} label={items.length ? cta : "Browse all products"} empty={!items.length} />
         </div>
       </Container>
     </Section>

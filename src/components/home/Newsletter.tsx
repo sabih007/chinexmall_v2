@@ -58,7 +58,7 @@ export function NewsletterForm({
     return (
       <p
         className={cn(
-          "flex items-center gap-2 text-[13px]",
+          "flex items-center gap-2 text-[15px]",
           invert ? "text-paper/85" : "text-mint-ink",
         )}
       >
@@ -87,7 +87,7 @@ export function NewsletterForm({
           placeholder="Enter your email"
           autoComplete="email"
           className={cn(
-            "h-12 w-full rounded-full pl-5 pr-[124px] text-[13.5px] outline-none transition-colors",
+            "h-12 w-full rounded-full pl-5 pr-[124px] text-[15px] outline-none transition-colors",
             invert
               ? "border border-paper/25 bg-paper/10 text-paper placeholder:text-paper/55 focus:border-paper/60"
               : "border border-line bg-paper placeholder:text-muted focus:border-brand",
@@ -97,7 +97,7 @@ export function NewsletterForm({
           type="submit"
           disabled={status === "loading"}
           className={cn(
-            "group absolute right-1 top-1 flex h-10 items-center gap-2 rounded-full px-5 text-[13px] font-medium transition-colors disabled:opacity-50",
+            "group absolute right-1 top-1 flex h-10 items-center gap-2 rounded-full px-5 text-[15px] font-medium transition-colors disabled:opacity-50",
             invert
               ? "bg-gold text-ink hover:bg-gold-hover"
               : "bg-brand text-paper hover:bg-brand-hover",
@@ -116,7 +116,7 @@ export function NewsletterForm({
         <p
           role="alert"
           className={cn(
-            "mt-2 text-[12px]",
+            "mt-2 text-[14px]",
             invert ? "text-gold" : "text-accent",
           )}
         >
@@ -126,7 +126,7 @@ export function NewsletterForm({
 
       <p
         className={cn(
-          "mt-3 text-[11.5px]",
+          "mt-3 text-[13px]",
           invert ? "text-paper/55" : "text-muted",
         )}
       >
@@ -146,7 +146,7 @@ export function Newsletter() {
             <h2 className="display mt-4 text-[2rem] sm:text-[2.4rem]">
               Get first dibs.
             </h2>
-            <p className="mt-4 max-w-md text-[14.5px] leading-relaxed text-ink-soft/80">
+            <p className="mt-4 max-w-md text-[16px] leading-relaxed text-ink-soft/80">
               New arrivals, trending finds and special offers — straight to your
               inbox, about twice a month.
             </p>

@@ -36,7 +36,7 @@ export function Accordion({
               aria-controls={`acc-${item.id}`}
               className="flex w-full items-center justify-between gap-4 py-5 text-left"
             >
-              <span className="text-[13.5px] font-semibold">{item.title}</span>
+              <span className="text-[15px] font-semibold">{item.title}</span>
               <Plus
                 size={16}
                 strokeWidth={1.5}
@@ -57,7 +57,7 @@ export function Accordion({
                   transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="pb-6 text-[13.5px] leading-relaxed text-muted">
+                  <div className="pb-6 text-[15px] leading-relaxed text-muted">
                     {item.content}
                   </div>
                 </motion.div>

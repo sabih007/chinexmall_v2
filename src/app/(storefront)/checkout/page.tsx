@@ -36,14 +36,14 @@ export default async function CheckoutPage() {
 
       {!account && (
         <p className="mb-8 rounded-card bg-sand px-5 py-4 text-[13px] text-ink-soft">
-          Have an account?{" "}
+          <strong className="font-medium">Guest checkout — no account needed.</strong>{" "}Already a customer?{" "}
           <Link
             href="/account/login?next=%2Fcheckout"
             className="font-medium text-brand underline-offset-4 hover:underline"
           >
             Sign in
           </Link>{" "}
-          to fill this in from your saved details — or carry on as a guest.
+          to use your saved details, or continue below.
         </p>
       )}
 

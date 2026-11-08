@@ -13,7 +13,7 @@ export async function RelatedProducts({ product }: { product: Product }) {
         <SectionHeading
           eyebrow="Goes well with"
           title="You may also like"
-          subtitle="Picked from the same collection and from what other customers bought."
+          subtitle="More finds from our catalogue to explore."
         />
         <ProductGrid products={related} />
       </Container>

@@ -93,7 +93,7 @@ export function SectionHeading({
         {subtitle && (
           <p
             className={cn(
-              "mt-2 text-[13.5px] leading-relaxed",
+              "mt-2 text-[15px] leading-relaxed",
               invert ? "text-paper/70" : "text-muted",
             )}
           >
@@ -169,7 +169,7 @@ export function ProductCardSkeleton() {
 export function SpecRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex justify-between gap-6 border-b border-line py-3 last:border-0">
-      <dt className="text-[12.5px] text-muted">{label}</dt>
+      <dt className="text-[14px] text-muted">{label}</dt>
       <dd className="text-right text-sm">{value}</dd>
     </div>
   );

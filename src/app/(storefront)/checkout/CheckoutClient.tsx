@@ -314,7 +314,7 @@ function CheckoutForm({
         />
 
         {delivery === "standard" && !shipping.qualified && (
-          <p className="mt-4 bg-sand px-4 py-3 text-[12px] text-ink/80">
+          <p className="mt-4 bg-sand px-4 py-3 text-[14px] text-ink/80">
             Add{" "}
             <strong className="font-semibold">
               {formatPrice(shipping.remaining)}
@@ -323,7 +323,7 @@ function CheckoutForm({
           </p>
         )}
 
-        <ul className="mt-6 space-y-3 text-[12px] text-muted">
+        <ul className="mt-6 space-y-3 text-[14px] text-muted">
           <Assurance icon={<Lock size={14} strokeWidth={1.6} />}>
             Your details are used for this delivery only.
           </Assurance>
@@ -370,7 +370,7 @@ function CheckoutForm({
               />
             </Field>
           </div>
-          <p className="-mt-1 text-[12px] text-muted">
+          <p className="-mt-1 text-[14px] text-muted">
             We call or message this number to confirm your order before
             dispatch.
           </p>
@@ -532,7 +532,7 @@ function CheckoutForm({
                 }
               >
                 {method.id === "bank-transfer" && (
-                  <span className="mt-4 block border-t border-line pt-4 text-[12.5px] text-muted">
+                  <span className="mt-4 block border-t border-line pt-4 text-[14px] text-muted">
                     <span className="block font-medium text-ink">
                       {bankAccount.bank} — {bankAccount.title}
                     </span>
@@ -553,7 +553,7 @@ function CheckoutForm({
           {formError && (
             <p
               role="alert"
-              className="mb-5 rounded-card border border-accent/40 bg-accent-soft px-4 py-3 text-[13px] text-accent"
+              className="mb-5 rounded-card border border-accent/40 bg-accent-soft px-4 py-3 text-[15px] text-accent"
             >
               {formError}
             </p>
@@ -565,7 +565,7 @@ function CheckoutForm({
               : `Place order · ${formatPrice(totals.total)}`}
           </Button>
 
-          <p className="mt-4 text-center text-[11.5px] leading-relaxed text-muted">
+          <p className="mt-4 text-center text-[13px] leading-relaxed text-muted">
             By placing this order you agree to our{" "}
             <Link
               href="/policies/terms"
@@ -584,7 +584,7 @@ function CheckoutForm({
           </p>
 
           <div className="mt-6 flex flex-col items-center gap-2 border-t border-line pt-6 text-center">
-            <p className="text-[12px] text-muted">
+            <p className="text-[14px] text-muted">
               Prefer to order in a chat? We are on WhatsApp at{" "}
               {site.whatsapp.display}.
             </p>
@@ -592,7 +592,7 @@ function CheckoutForm({
               href={whatsappOrder}
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex items-center gap-2 rounded-full bg-mint px-5 py-2.5 text-[12.5px] font-medium text-mint-ink transition-colors hover:bg-mint-deep"
+              className="inline-flex items-center gap-2 rounded-full bg-mint px-5 py-2.5 text-[14px] font-medium text-mint-ink transition-colors hover:bg-mint-deep"
             >
               <MessageCircle size={14} strokeWidth={1.6} />
               Order via WhatsApp

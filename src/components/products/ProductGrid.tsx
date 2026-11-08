@@ -1,21 +1,22 @@
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "./ProductCard";
+import { CategorySlider } from "@/components/home/CategorySlider";
 
 const COLUMNS: Record<3 | 4 | 5, string> = {
-  3: "lg:grid-cols-3",
+  3: "sm:grid-cols-2 lg:grid-cols-3",
   4: "sm:grid-cols-3 lg:grid-cols-4",
   5: "sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
 };
 
 const SIZES: Record<3 | 4 | 5, string> = {
-  3: "(min-width:1024px) 30vw, (min-width:768px) 30vw, 45vw",
-  4: "(min-width:1024px) 22vw, (min-width:640px) 30vw, 45vw",
-  5: "(min-width:1280px) 18vw, (min-width:1024px) 22vw, (min-width:640px) 30vw, 45vw",
+  3: "(min-width:1024px) 30vw, (min-width:640px) 45vw, 90vw",
+  4: "(min-width:1024px) 22vw, (min-width:640px) 30vw, 90vw",
+  5: "(min-width:1280px) 18vw, (min-width:1024px) 22vw, (min-width:640px) 30vw, 90vw",
 };
 
 /**
- * 2 columns on mobile, up to 5 on a wide desktop (spec §17). `priorityCount`
+ * One column on mobile, up to 5 on a wide desktop. `priorityCount`
  * marks the first N images as LCP candidates — only use it above the fold.
  */
 export function ProductGrid({
@@ -23,16 +24,27 @@ export function ProductGrid({
   priorityCount = 0,
   columns = 4,
   className,
+  mobileSlider = false,
 }: {
   products: Product[];
   priorityCount?: number;
   columns?: 3 | 4 | 5;
   className?: string;
+  mobileSlider?: boolean;
 }) {
+  if (mobileSlider) return (
+    <CategorySlider label="products" desktopGrid gridClassName={COLUMNS[columns]}>
+      {products.map((product, index) => (
+        <li key={product.id} className="flex w-full shrink-0 snap-start sm:w-auto">
+          <ProductCard product={product} priority={index < priorityCount} sizes={SIZES[columns]} className="w-full" />
+        </li>
+      ))}
+    </CategorySlider>
+  );
   return (
     <div
       className={cn(
-        "grid grid-cols-2 gap-3 sm:gap-4",
+        "grid grid-cols-1 gap-3 sm:gap-4",
         COLUMNS[columns],
         className,
       )}
@@ -68,8 +80,8 @@ export function ProductRail({
         <ProductCard
           key={product.id}
           product={product}
-          className="w-[62vw] shrink-0 snap-start sm:w-[38vw] lg:w-[23%] xl:w-[19%]"
-          sizes="(min-width:1280px) 19vw, (min-width:1024px) 23vw, (min-width:640px) 38vw, 62vw"
+          className="w-full shrink-0 snap-start sm:w-[38vw] lg:w-[23%] xl:w-[19%]"
+          sizes="(min-width:1280px) 19vw, (min-width:1024px) 23vw, (min-width:640px) 38vw, 90vw"
         />
       ))}
     </div>

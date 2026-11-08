@@ -9,7 +9,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const url = (path: string) => `${site.url}${path}`;
-  const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = (
     [
@@ -27,13 +26,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.3,
       })),
     ] satisfies MetadataRoute.Sitemap
-  ).map((entry) => ({ ...entry, lastModified: now }));
+  );
 
   return [
     ...staticRoutes,
     ...categories.map((c) => ({
       url: url(`/collections/${c.slug}`),
-      lastModified: now,
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),

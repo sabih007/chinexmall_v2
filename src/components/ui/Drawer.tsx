@@ -47,7 +47,10 @@ export function Drawer({
 
   /* Focus the panel when it opens so keyboard users land inside it. */
   useEffect(() => {
-    if (open) panelRef.current?.focus();
+    if (!open) return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    panelRef.current?.focus();
+    return () => { if (previous?.isConnected) previous.focus(); };
   }, [open]);
 
   return (
@@ -66,6 +69,16 @@ export function Drawer({
           <motion.div
             ref={panelRef}
             tabIndex={-1}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") { event.stopPropagation(); onClose(); return; }
+              if (event.key !== "Tab") return;
+              const targets = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter((element) => element.getClientRects().length > 0);
+              const first = targets[0];
+              const last = targets[targets.length - 1];
+              if (!first) { event.preventDefault(); return; }
+              if (event.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) { event.preventDefault(); last.focus(); }
+              else if (!event.shiftKey && (document.activeElement === last || document.activeElement === panelRef.current)) { event.preventDefault(); first.focus(); }
+            }}
             className={cn(
               "absolute flex flex-col bg-paper shadow-[0_0_60px_rgba(0,0,0,0.12)] outline-none",
               positions[side],
@@ -80,7 +93,7 @@ export function Drawer({
               {headerSlot ?? (
                 <h2
                   id={labelledBy}
-                  className="text-[14px] font-semibold"
+                  className="text-[16px] font-semibold"
                 >
                   {title}
                 </h2>

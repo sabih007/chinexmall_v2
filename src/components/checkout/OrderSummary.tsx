@@ -64,7 +64,7 @@ export function OrderSummary({
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-4 border-b border-line px-5 py-4 text-left lg:hidden"
       >
-        <span className="flex items-center gap-2 text-[12px] font-medium">
+        <span className="flex items-center gap-2 text-[14px] font-medium">
           {open ? "Hide" : "Show"} order summary
           <ChevronDown
             size={15}
@@ -72,14 +72,14 @@ export function OrderSummary({
             className={cn("transition-transform duration-300", open && "rotate-180")}
           />
         </span>
-        <span className="text-[15px] font-semibold tabular-nums">
+        <span className="text-[17px] font-semibold tabular-nums">
           {formatPrice(totals.total)}
         </span>
       </button>
 
       <div className={cn("lg:block", !open && "hidden")}>
         <div className="hidden border-b border-line px-6 py-4 lg:block">
-          <h2 className="text-[14px] font-semibold">
+          <h2 className="text-[16px] font-semibold">
             Order summary{" "}
             <span className="ml-1 font-normal text-muted tabular-nums">
               ({count})
@@ -98,21 +98,21 @@ export function OrderSummary({
                   sizes="64px"
                   className="object-cover"
                 />
-                <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-ink px-1.5 text-[10px] font-medium text-paper tabular-nums">
+                <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-ink px-1.5 text-[12px] font-medium text-paper tabular-nums">
                   {line.quantity}
                 </span>
               </ImageOrLink>
 
               <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-[13px] font-medium">{line.name}</p>
+                  <p className="truncate text-[15px] font-medium">{line.name}</p>
                   {line.variantLabel && (
-                    <p className="mt-0.5 text-[11.5px] text-muted">
+                    <p className="mt-0.5 text-[13px] text-muted">
                       {line.variantLabel}
                     </p>
                   )}
                 </div>
-                <p className="shrink-0 text-[13px] font-medium tabular-nums">
+                <p className="shrink-0 text-[15px] font-medium tabular-nums">
                   {formatPrice(line.unitPrice * line.quantity)}
                 </p>
               </div>
@@ -122,7 +122,7 @@ export function OrderSummary({
 
         {couponField}
 
-        <dl className="space-y-3 border-t border-line px-5 py-5 text-[13.5px] sm:px-6">
+        <dl className="space-y-3 border-t border-line px-5 py-5 text-[15px] sm:px-6">
           <Row label="Subtotal" value={formatPrice(totals.subtotal)} />
           {totals.savings > 0 && (
             <Row
@@ -148,7 +148,7 @@ export function OrderSummary({
         </dl>
 
         <div className="flex items-baseline justify-between border-t border-line px-5 py-5 sm:px-6">
-          <span className="text-[13.5px] font-semibold">
+          <span className="text-[15px] font-semibold">
             Total
           </span>
           <span className="text-[19px] font-semibold tabular-nums">

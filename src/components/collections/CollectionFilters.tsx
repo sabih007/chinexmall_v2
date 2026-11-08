@@ -135,7 +135,7 @@ function CheckRow({
   swatch?: string;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 py-1.5 text-[13px]">
+    <label className="flex cursor-pointer items-center gap-3 py-1.5 text-[15px]">
       <input
         type="checkbox"
         checked={checked}
@@ -163,7 +163,7 @@ function CheckRow({
         />
       )}
       <span className="flex-1">{label}</span>
-      <span className="text-[11.5px] text-muted tabular-nums">{count}</span>
+      <span className="text-[13px] text-muted tabular-nums">{count}</span>
     </label>
   );
 }
@@ -199,14 +199,14 @@ export function FilterPanel({
   return (
     <div>
       <div className="flex items-center justify-between border-b border-line pb-4">
-        <p className="text-[13px] font-semibold">
+        <p className="text-[15px] font-semibold">
           Filter
         </p>
         {count > 0 && (
           <button
             type="button"
             onClick={clearAll}
-            className="text-[11.5px] text-muted underline underline-offset-4 hover:text-ink"
+            className="text-[13px] text-muted underline underline-offset-4 hover:text-ink"
           >
             Clear all ({count})
           </button>
@@ -236,7 +236,7 @@ export function FilterPanel({
             defaultValue={selected.minPrice}
             onBlur={(e) => setSingle("minPrice", e.target.value)}
             aria-label="Minimum price"
-            className="w-full rounded-full border border-line px-4 py-2 text-[13px] outline-none focus:border-brand"
+            className="w-full rounded-full border border-line px-4 py-2 text-[15px] outline-none focus:border-brand"
           />
           <span className="text-muted">—</span>
           <input
@@ -246,14 +246,14 @@ export function FilterPanel({
             defaultValue={selected.maxPrice}
             onBlur={(e) => setSingle("maxPrice", e.target.value)}
             aria-label="Maximum price"
-            className="w-full rounded-full border border-line px-4 py-2 text-[13px] outline-none focus:border-brand"
+            className="w-full rounded-full border border-line px-4 py-2 text-[15px] outline-none focus:border-brand"
           />
         </div>
-        <p className="mt-2 text-[11.5px] text-muted">
+        <p className="mt-2 text-[13px] text-muted">
           Catalogue range {formatPrice(facets.priceRange.min)} –{" "}
           {formatPrice(facets.priceRange.max)}
         </p>
-        <label className="mt-4 flex cursor-pointer items-center gap-3 text-[13px]">
+        <label className="mt-4 flex cursor-pointer items-center gap-3 text-[15px]">
           <input
             type="checkbox"
             checked={selected.sale}
@@ -339,7 +339,7 @@ export function FilterPanel({
         ].map((option) => (
           <label
             key={option.value}
-            className="flex cursor-pointer items-center gap-3 py-1.5 text-[13px]"
+            className="flex cursor-pointer items-center gap-3 py-1.5 text-[15px]"
           >
             <input
               type="radio"
@@ -397,27 +397,27 @@ export function CollectionToolbar({
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[12.5px] font-medium lg:hidden"
+          className="flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[14px] font-medium lg:hidden"
         >
           <SlidersHorizontal size={15} strokeWidth={1.6} />
           Filter
           {count > 0 && (
-            <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[10px] text-paper tabular-nums">
+            <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[12px] text-paper tabular-nums">
               {count}
             </span>
           )}
         </button>
 
-        <p className="hidden text-[12px] text-muted tabular-nums lg:block">
+        <p className="hidden text-[14px] text-muted tabular-nums lg:block">
           {total} product{total === 1 ? "" : "s"}
         </p>
 
-        <label className="flex items-center gap-2 text-[12.5px] text-muted">
+        <label className="flex items-center gap-2 text-[14px] text-muted">
           <span className="hidden sm:inline">Sort</span>
           <select
             value={sort}
             onChange={(e) => setSingle("sort", e.target.value)}
-            className="cursor-pointer border-0 bg-transparent py-1 pr-5 text-[12px] font-medium normal-case tracking-normal text-ink outline-none"
+            className="cursor-pointer border-0 bg-transparent py-1 pr-5 text-[14px] font-medium normal-case tracking-normal text-ink outline-none"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -438,7 +438,7 @@ export function CollectionToolbar({
                   type="button"
                   onClick={() => removeValue(key, value)}
                   aria-label={`Remove filter ${value}`}
-                  className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[11.5px] transition-colors hover:border-brand hover:text-brand"
+                  className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[13px] transition-colors hover:border-brand hover:text-brand"
                 >
                   {value}
                   <X size={12} strokeWidth={1.8} className="text-muted" />
@@ -450,7 +450,7 @@ export function CollectionToolbar({
             <button
               type="button"
               onClick={clearAll}
-              className="px-2 py-1.5 text-[11.5px] text-muted underline underline-offset-4 hover:text-ink"
+              className="px-2 py-1.5 text-[13px] text-muted underline underline-offset-4 hover:text-ink"
             >
               Clear all
             </button>

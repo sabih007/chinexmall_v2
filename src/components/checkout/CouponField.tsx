@@ -102,10 +102,10 @@ export function CouponField({
               className="mt-0.5 shrink-0 text-mint-ink"
             />
             <div className="min-w-0">
-              <p className="font-mono text-[12.5px] font-semibold tracking-wide text-mint-ink">
+              <p className="font-mono text-[14px] font-semibold tracking-wide text-mint-ink">
                 {coupon.code}
               </p>
-              <p className="mt-0.5 text-[11.5px] leading-relaxed text-mint-ink/80">
+              <p className="mt-0.5 text-[13px] leading-relaxed text-mint-ink/80">
                 {problem
                   ? problem
                   : `${coupon.description || describeCoupon(coupon)} — saving ${formatPrice(discount)}`}
@@ -131,7 +131,7 @@ export function CouponField({
           row whose button submits nothing — Enter is handled on the input. */}
       <label
         htmlFor="coupon-code"
-        className="text-[12px] font-medium text-ink-soft"
+        className="text-[14px] font-medium text-ink-soft"
       >
         Have a coupon?
       </label>
@@ -153,7 +153,7 @@ export function CouponField({
           onKeyDown={(event) => {
             if (event.key === "Enter") apply(event);
           }}
-          className="h-11 w-full rounded-full border border-line bg-paper px-4 font-mono text-[13px] uppercase tracking-wide outline-none transition-colors placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-muted/70 focus:border-brand"
+          className="h-11 w-full rounded-full border border-line bg-paper px-4 font-mono text-[15px] uppercase tracking-wide outline-none transition-colors placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-muted/70 focus:border-brand"
         />
         <Button
           type="button"
@@ -173,7 +173,7 @@ export function CouponField({
         <p
           id="coupon-error"
           role="alert"
-          className="mt-2 flex items-start gap-1.5 text-[11.5px] leading-relaxed text-accent"
+          className="mt-2 flex items-start gap-1.5 text-[13px] leading-relaxed text-accent"
         >
           <AlertCircle size={13} strokeWidth={1.8} className="mt-px shrink-0" />
           {error}

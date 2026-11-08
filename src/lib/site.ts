@@ -90,11 +90,14 @@ export const legalNav = [
 ];
 
 export const socials = [
-  { label: "Instagram", href: "https://instagram.com", handle: "@chinexmall" },
-  { label: "Facebook", href: "https://facebook.com", handle: "/chinexmall" },
-  { label: "TikTok", href: "https://tiktok.com", handle: "@chinexmall" },
-  { label: "YouTube", href: "https://youtube.com", handle: "@chinexmall" },
-];
+  { label: "Instagram", href: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? "", handle: "@chinexmall" },
+  { label: "Facebook", href: process.env.NEXT_PUBLIC_FACEBOOK_URL ?? "", handle: "/chinexmall" },
+  { label: "TikTok", href: process.env.NEXT_PUBLIC_TIKTOK_URL ?? "", handle: "@chinexmall" },
+  { label: "YouTube", href: process.env.NEXT_PUBLIC_YOUTUBE_URL ?? "", handle: "@chinexmall" },
+].filter((profile) => {
+  try { const url = new URL(profile.href); return url.protocol === "https:" && url.pathname !== "/"; }
+  catch { return false; }
+});
 
 export const popularSearches = [
   "Home décor",
@@ -174,7 +177,16 @@ export interface PaymentMethod {
   fee: number;
 }
 
-export const paymentMethods: PaymentMethod[] = [
+/** Public receiving details. Bank transfer stays unavailable until configured. */
+export const bankAccount = {
+  bank: process.env.NEXT_PUBLIC_BANK_NAME ?? "",
+  title: process.env.NEXT_PUBLIC_BANK_ACCOUNT_TITLE ?? "",
+  number: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? "",
+  iban: process.env.NEXT_PUBLIC_BANK_IBAN ?? "",
+};
+export const bankTransferConfigured = Boolean(bankAccount.bank && bankAccount.title && (bankAccount.number || bankAccount.iban));
+
+export const paymentMethodOptions: PaymentMethod[] = [
   {
     id: "cod",
     label: "Cash on delivery",
@@ -189,14 +201,7 @@ export const paymentMethods: PaymentMethod[] = [
     fee: 0,
   },
 ];
-
-/** Shown on the confirmation page when the customer chooses bank transfer. */
-export const bankAccount = {
-  bank: "Meezan Bank",
-  title: "ChineXmall",
-  number: "0123 4567 8901 2345",
-  iban: "PK00 MEZN 0000 0000 0000 0000",
-} as const;
+export const paymentMethods = paymentMethodOptions.filter((method) => method.id !== "bank-transfer" || bankTransferConfigured);
 
 /** Pakistan's provinces and territories, for the delivery address. */
 export const provinces = [

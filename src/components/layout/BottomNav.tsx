@@ -23,14 +23,14 @@ export function BottomNav() {
     menuOpen,
   } = useStore();
 
-  if (cartOpen || searchOpen || menuOpen) return null;
+  if (cartOpen || searchOpen || menuOpen || pathname === "/checkout") return null;
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   const itemClass = (active: boolean) =>
     cn(
-      "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10.5px] font-medium transition-colors",
+      "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[12px] font-medium transition-colors",
       active ? "text-brand" : "text-muted",
     );
 

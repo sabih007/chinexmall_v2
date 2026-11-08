@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { StoreImage as Image } from "@/components/common/StoreImage";
 import { Breadcrumbs, type Crumb } from "@/components/common/Breadcrumbs";
 import { Container } from "@/components/ui/Primitives";
 

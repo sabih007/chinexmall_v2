@@ -4,6 +4,7 @@ import { TrackViewContent } from "@/components/analytics/MetaEvents";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { ProductDetail } from "@/components/products/ProductDetail";
 import { RelatedProducts } from "@/components/products/RelatedProducts";
+import { RecentlyViewed } from "@/components/products/RecentlyViewed";
 import { Container } from "@/components/ui/Primitives";
 import { discountPercent } from "@/lib/format";
 import {
@@ -11,6 +12,7 @@ import {
   getCategoryBySlug,
   getProductBySlug,
   getReviewsForProduct,
+  reviewsArePlaceholder,
 } from "@/lib/repository";
 import { site } from "@/lib/site";
 
@@ -77,11 +79,11 @@ export default async function ProductPage({ params }: PageProps) {
     brand: { "@type": "Brand", name: product.brand },
     material: product.material,
     itemCondition: "https://schema.org/NewCondition",
-    aggregateRating: {
+    ...(!reviewsArePlaceholder && product.reviewCount > 0 ? { aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: product.rating,
       reviewCount: product.reviewCount,
-    },
+    } } : {}),
     offers: {
       "@type": "Offer",
       url: `${site.url}/product/${product.slug}`,
@@ -93,7 +95,7 @@ export default async function ProductPage({ params }: PageProps) {
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
     },
-    ...(productReviews.length > 0
+    ...(!reviewsArePlaceholder && productReviews.length > 0
       ? {
           review: productReviews.map((r) => ({
             "@type": "Review",
@@ -115,7 +117,7 @@ export default async function ProductPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd).replace(/</g, "\\u003c") }}
       />
 
       {/* Meta Pixel ViewContent. Renders nothing; only the four fields the
@@ -153,6 +155,7 @@ export default async function ProductPage({ params }: PageProps) {
       </Container>
 
       <RelatedProducts product={product} />
+      <RecentlyViewed key={product.slug} currentSlug={product.slug} />
 
       {/* Clears the sticky mobile add-to-cart + bottom nav */}
       <div className="h-16 lg:hidden" aria-hidden />

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
    does not jump when validation runs. */
 
 const control =
-  "h-12 w-full rounded-full border border-line bg-paper px-4.5 text-[14px] text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-brand";
+  "h-12 w-full rounded-full border border-line bg-paper px-4.5 text-[16px] text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-brand";
 
 export function Field({
   label,
@@ -30,7 +30,7 @@ export function Field({
     <div className={cn("flex flex-col gap-1.5", className)}>
       <label
         htmlFor={htmlFor}
-        className="text-[12px] font-medium text-ink-soft"
+        className="text-[14px] font-medium text-ink-soft"
       >
         {label}
         {optional && <span className="ml-1.5 normal-case tracking-normal opacity-70">(optional)</span>}
@@ -40,7 +40,7 @@ export function Field({
         id={`${htmlFor}-error`}
         role={error ? "alert" : undefined}
         className={cn(
-          "min-h-4 text-[11.5px] text-accent",
+          "min-h-4 text-[13px] text-accent",
           !error && "invisible",
         )}
       >
@@ -174,14 +174,14 @@ export function OptionCard({
 
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-3">
-            <span className="text-[13.5px] font-medium">{title}</span>
+            <span className="text-[15px] font-medium">{title}</span>
             {trailing && (
-              <span className="shrink-0 text-[13px] font-medium tabular-nums">
+              <span className="shrink-0 text-[15px] font-medium tabular-nums">
                 {trailing}
               </span>
             )}
           </span>
-          <span className="mt-1 block text-[12.5px] leading-relaxed text-muted">
+          <span className="mt-1 block text-[14px] leading-relaxed text-muted">
             {description}
           </span>
           {checked && children}
@@ -203,8 +203,8 @@ export function Step({
 }) {
   return (
     <section className="border-t border-line pt-8 first:border-t-0 first:pt-0">
-      <h2 className="mb-5 flex items-center gap-3 text-[14px] font-semibold">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[11px] text-paper tabular-nums">
+      <h2 className="mb-5 flex items-center gap-3 text-[16px] font-semibold">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-[13px] text-paper tabular-nums">
           {index}
         </span>
         {title}

@@ -1,9 +1,10 @@
 ﻿"use client";
 
-import { ArrowUpRight, ChevronDown, Heart, LayoutGrid, Menu, MessageCircle, Search, ShoppingBag } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Heart, LayoutGrid, Menu, MessageCircle, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { HeaderSearch } from "@/components/search/HeaderSearch";
 import { AccountLink } from "@/components/account/AccountLink";
 import { Logo } from "@/components/layout/Logo";
 import { useStore } from "@/components/providers/StoreProvider";
@@ -16,10 +17,8 @@ import { whatsappLink } from "@/lib/whatsapp";
 type NavItem = { label: string; href: string };
 export function Header({ categories, links }: { categories: ShopCategory[]; links: NavItem[] }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { count, wishlist, openCart, openMenu, hydrated } = useStore();
   const [categoriesOpen, setCategoriesOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const categoriesRef = useRef<HTMLDivElement>(null);
   const categoryButton = useRef<HTMLButtonElement>(null);
 
@@ -36,11 +35,6 @@ export function Header({ categories, links }: { categories: ShopCategory[]; link
     return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
   }, [categoriesOpen]);
 
-  function submitSearch(event: React.FormEvent) {
-    event.preventDefault();
-    const term = query.trim();
-    if (term) router.push(`/shop?q=${encodeURIComponent(term)}`);
-  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-paper">
@@ -48,22 +42,14 @@ export function Header({ categories, links }: { categories: ShopCategory[]; link
         <div className="flex h-16 items-center gap-3 lg:h-20 lg:gap-6">
           <button type="button" onClick={openMenu} aria-label="Open navigation and categories" className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center lg:hidden"><Menu size={21} /></button>
           <Link href="/" aria-label={`${site.name} home`} className="shrink-0"><Logo priority className="h-6 sm:h-8" /></Link>
-          <form onSubmit={submitSearch} role="search" aria-label="Desktop product search" className="relative hidden flex-1 lg:block">
-            <label htmlFor="header-search" className="sr-only">Search products</label>
-            <input id="header-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search products, categories and more" className="h-11 w-full rounded-full border border-line bg-sand pl-5 pr-14 text-sm outline-none focus:border-brand" />
-            <button type="submit" aria-label="Search products" className="absolute right-0 top-0 flex h-11 w-12 items-center justify-center rounded-full text-brand"><Search size={19} /></button>
-          </form>
+          <HeaderSearch className="hidden flex-1 lg:block" />
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <AccountLink />
             <Link href="/wishlist" aria-label="Wishlist" className="relative hidden h-11 w-11 items-center justify-center lg:flex"><Heart size={20} /><CountBubble value={hydrated ? wishlist.length : 0} /></Link>
             <button type="button" onClick={openCart} aria-label={`Cart, ${hydrated ? count : 0} items`} className="relative flex h-11 w-11 items-center justify-center"><ShoppingBag size={20} /><CountBubble value={hydrated ? count : 0} /></button>
           </div>
         </div>
-        <form onSubmit={submitSearch} role="search" aria-label="Mobile product search" className="relative mb-3 lg:hidden">
-          <label htmlFor="mobile-header-search" className="sr-only">Search products</label>
-          <input id="mobile-header-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for your next useful find" className="h-11 w-full rounded-full border border-line bg-sand pl-4 pr-14 text-sm outline-none focus:border-brand" />
-          <button type="submit" aria-label="Search products" className="absolute right-0 top-0 flex h-11 w-12 items-center justify-center rounded-full text-brand"><Search size={19} /></button>
-        </form>
+        <HeaderSearch className="mb-3 lg:hidden" />
         <div className="hidden flex-wrap items-center gap-3 pb-3 lg:flex xl:gap-5">
           {categories.length > 0 && <div ref={categoriesRef} className="relative shrink-0" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setCategoriesOpen(false); }}>
             <button ref={categoryButton} type="button" aria-expanded={categoriesOpen} aria-controls="desktop-categories" onClick={() => setCategoriesOpen(!categoriesOpen)} className="flex h-11 items-center gap-2 rounded-full bg-brand px-5 text-sm font-medium text-paper"><LayoutGrid size={17} />Shop by category<ChevronDown size={15} className={cn("transition-transform", categoriesOpen && "rotate-180")} /></button>
@@ -76,7 +62,7 @@ export function Header({ categories, links }: { categories: ShopCategory[]; link
           </nav>
           <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="group ml-auto inline-flex h-10 shrink-0 items-center gap-2.5 rounded-full border border-[#13865a] bg-gradient-to-r from-[#087b52] to-[#119761] pl-1.5 pr-3 text-white shadow-[0_4px_12px_-5px_rgba(8,123,82,0.5)] transition-all duration-200 hover:brightness-110 hover:shadow-[0_6px_16px_-5px_rgba(8,123,82,0.6)] motion-safe:hover:-translate-y-0.5" aria-label={`Chat on WhatsApp: ${site.whatsapp.display}`}>
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15"><MessageCircle size={16} strokeWidth={1.9} /></span>
-            <span className="text-[12px] font-semibold tabular-nums">{site.whatsapp.display}</span>
+            <span className="text-[14px] font-semibold tabular-nums">{site.whatsapp.display}</span>
             <ArrowUpRight size={14} className="text-white/80 transition-transform motion-safe:group-hover:translate-x-0.5 motion-safe:group-hover:-translate-y-0.5" />
           </a>
         </div>
@@ -87,5 +73,5 @@ export function Header({ categories, links }: { categories: ShopCategory[]; link
 
 function CountBubble({ value }: { value: number }) {
   if (value <= 0) return null;
-  return <span className="absolute -right-0.5 top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-gold px-1 text-[10px] font-semibold text-ink">{value}</span>;
+  return <span className="absolute -right-0.5 top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-gold px-1 text-[12px] font-semibold text-ink">{value}</span>;
 }

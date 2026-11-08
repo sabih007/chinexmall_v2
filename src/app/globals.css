@@ -9,7 +9,7 @@
   --color-paper: #ffffff;
   --color-sand: #f4f7fc;
   --color-sand-deep: #e7eefb;
-  --color-muted: #6f7d99;
+  --color-muted: #596985;
   --color-line: #e2e9f5;
 
   /* ---- Brand: taken straight off the ChineXmall mark ----
@@ -45,8 +45,16 @@
   --color-tint-green: #dff1e4;
   --color-tint-peach: #fde2cc;
 
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, -apple-system,
+  --font-sans: var(--font-afacad), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, sans-serif;
+
+  /* Afacad has a light, compact appearance: give reading text more room. */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6;
 
   /* Rounded throughout: cards, tiles, and pills that are fully round */
   --radius-card: 12px;
@@ -72,6 +80,8 @@
     background-color: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -89,7 +99,7 @@
   }
 
   .eyebrow {
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     font-weight: 600;
@@ -121,6 +131,13 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .group:hover .product-card-secondary[data-ready="true"] {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   .edge-fade {

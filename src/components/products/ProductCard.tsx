@@ -1,7 +1,7 @@
 "use client";
 
 import { Heart, ShoppingBasket } from "lucide-react";
-import Image from "next/image";
+import { StoreImage as Image } from "@/components/common/StoreImage";
 import Link from "next/link";
 import { useState } from "react";
 import { useStore } from "@/components/providers/StoreProvider";
@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 export function ProductCard({
   product,
   priority,
-  sizes = "(min-width:1280px) 20vw, (min-width:768px) 30vw, 45vw",
+  sizes = "(min-width:1280px) 20vw, (min-width:768px) 30vw, 90vw",
   className,
 }: {
   product: Product;
@@ -33,6 +33,7 @@ export function ProductCard({
 }) {
   const { addToCart, toggleWishlist, isWishlisted, hydrated } = useStore();
   const [adding, setAdding] = useState(false);
+  const [loadedSecondary, setLoadedSecondary] = useState("");
 
   const discount = discountPercent(product.price, product.compareAtPrice);
   const soldOut = product.stock <= 0;
@@ -56,7 +57,7 @@ export function ProductCard({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="truncate text-[11px] capitalize text-muted">
+        <span className="truncate text-[13px] capitalize text-muted">
           {product.productType}
         </span>
         <button
@@ -94,7 +95,7 @@ export function ProductCard({
             blurDataURL={BLUR_DATA_URL}
             className={cn(
               "object-cover transition-all duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
-              secondImage ? "group-hover:opacity-0" : "group-hover:scale-[1.05]",
+              "motion-safe:group-hover:scale-[1.03]",
             )}
           />
           {secondImage && (
@@ -105,7 +106,9 @@ export function ProductCard({
               fill
               sizes={sizes}
               loading="lazy"
-              className="scale-[1.02] object-cover opacity-0 transition-all duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-100 group-hover:opacity-100"
+              onLoad={() => setLoadedSecondary(secondImage)}
+              data-ready={loadedSecondary === secondImage}
+              className="product-card-secondary scale-[1.02] object-cover opacity-0 transition-all duration-500"
             />
           )}
         </div>
@@ -134,7 +137,7 @@ export function ProductCard({
           optionPills.map((value) => (
             <li
               key={value.value}
-              className="rounded-full border border-line px-2 py-[3px] text-[10.5px] leading-none text-muted"
+              className="rounded-full border border-line px-2 py-[3px] text-[12px] leading-none text-muted"
             >
               {value.label}
             </li>
@@ -142,22 +145,22 @@ export function ProductCard({
       </ul>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="text-[14px] font-semibold tabular-nums">
+        <span className="text-[16px] font-semibold tabular-nums">
           {formatPrice(product.price)}
         </span>
         {discount > 0 && product.compareAtPrice && (
           <>
-            <span className="text-[12px] text-muted line-through tabular-nums">
+            <span className="text-[14px] text-muted line-through tabular-nums">
               {formatPrice(product.compareAtPrice)}
             </span>
-            <span className="rounded-full bg-accent px-1.5 py-[2px] text-[10px] font-semibold leading-none text-paper tabular-nums">
+            <span className="rounded-full bg-accent px-1.5 py-[2px] text-[12px] font-semibold leading-none text-paper tabular-nums">
               −{discount}%
             </span>
           </>
         )}
       </div>
 
-      <h3 className="mt-2 text-[13px] font-medium leading-snug">
+      <h3 className="mt-2 text-[15px] font-medium leading-snug">
         <Link
           href={`/product/${product.slug}`}
           className="line-clamp-2 transition-colors hover:text-brand"
@@ -180,7 +183,7 @@ export function ProductCard({
           <Link
             href={`/product/${product.slug}`}
             className={cn(
-              "flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand text-[12px] font-medium text-paper transition-colors hover:bg-brand-hover",
+              "flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand text-[14px] font-medium text-paper transition-colors hover:bg-brand-hover",
               soldOut && "pointer-events-none opacity-50",
             )}
           >
@@ -192,7 +195,7 @@ export function ProductCard({
             type="button"
             onClick={quickAdd}
             disabled={soldOut}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand text-[12px] font-medium text-paper transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand text-[14px] font-medium text-paper transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ShoppingBasket size={14} strokeWidth={1.7} />
             {soldOut ? "Sold out" : adding ? "Added" : "Add to cart"}

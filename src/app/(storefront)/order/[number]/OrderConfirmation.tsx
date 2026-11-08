@@ -15,7 +15,7 @@ import {
   formatPhone,
   paymentMethod,
 } from "@/lib/orders";
-import { site } from "@/lib/site";
+import { bankTransferConfigured, site } from "@/lib/site";
 import type { Order } from "@/lib/types";
 import { whatsappLink } from "@/lib/whatsapp";
 
@@ -143,9 +143,9 @@ export function OrderConfirmation({
         ) : (
           <Instruction
             icon={<Package size={16} strokeWidth={1.6} />}
-            title="Transfer and send the receipt"
+            title={bankTransferConfigured ? "Transfer and send the receipt" : "Contact us to arrange payment"}
           >
-            Transfer{" "}
+            {bankTransferConfigured ? <>Transfer{" "}
             <strong className="font-semibold text-ink">
               {formatPrice(order.totals.total)}
             </strong>{" "}
@@ -161,6 +161,7 @@ export function OrderConfirmation({
                 {bankAccount.iban}
               </span>
             </span>
+            </> : <p>Please <a href={whatsappLink({ message: `Hi, please help me arrange payment for order ${order.number}.` })} target="_blank" rel="noopener noreferrer" className="font-medium text-brand underline underline-offset-4">contact us on WhatsApp</a> for payment details, quoting {order.number}.</p>}
           </Instruction>
         )}
 
