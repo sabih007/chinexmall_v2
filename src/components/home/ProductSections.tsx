@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ProductGrid, ProductRail } from "@/components/products/ProductGrid";
 import { Container, Section, SectionHeading } from "@/components/ui/Primitives";
 import { getProducts } from "@/lib/repository";
-import type { ProductQuery } from "@/lib/types";
+import type { ProductQuery, SortKey } from "@/lib/types";
 
 function MoreLink({ href, label, empty = false }: { href: string; label: string; empty?: boolean }) {
   return (
@@ -33,6 +33,7 @@ async function ProductSection({
   query,
   href,
   cta,
+  fallback,
   layout = "grid",
   tone = "paper",
   id,
@@ -43,19 +44,31 @@ async function ProductSection({
   query: ProductQuery;
   href: string;
   cta: string;
+  fallback: { title: string; subtitle: string; sort: SortKey };
   layout?: "grid" | "rail";
   tone?: "paper" | "sand";
   id?: string;
 }) {
-  const { items } = await getProducts({ ...query, limit: 5 });
+  let { items } = await getProducts({ ...query, limit: 5 });
+  const useFallback = items.length === 0;
+  if (useFallback) {
+    // Merchandising labels are optional. Never make an existing catalogue
+    // disappear just because products have not been assigned those labels.
+    ({ items } = await getProducts({ availability: "in-stock", sort: fallback.sort, limit: 5 }));
+    if (items.length === 0) {
+      // Sold-out products remain visible with disabled purchasing controls.
+      ({ items } = await getProducts({ sort: fallback.sort, limit: 5 }));
+    }
+  }
+  const sectionHref = useFallback ? `/shop?sort=${fallback.sort}` : href;
 
   return (
     <Section tone={tone} id={id}>
       <Container>
         <SectionHeading
-          eyebrow={eyebrow}
-          title={title}
-          subtitle={subtitle}
+          eyebrow={useFallback ? "Discover more" : eyebrow}
+          title={useFallback ? fallback.title : title}
+          subtitle={useFallback ? fallback.subtitle : subtitle}
         />
       </Container>
 
@@ -76,7 +89,7 @@ async function ProductSection({
       )}
       <Container>
         <div className="mt-7 flex justify-center">
-          <MoreLink href={items.length ? href : "/shop"} label={items.length ? cta : "Browse all products"} empty={!items.length} />
+          <MoreLink href={items.length ? sectionHref : "/shop"} label={useFallback ? "Browse all products" : cta} empty={!items.length} />
         </div>
       </Container>
     </Section>
@@ -92,6 +105,7 @@ export function NewArrivals() {
       query={{ newArrival: true, availability: "in-stock", sort: "newest" }}
       href="/new-arrivals"
       cta="View all new arrivals"
+      fallback={{ title: "Latest in the shop", subtitle: "Explore the latest additions to our catalogue.", sort: "newest" }}
     />
   );
 }
@@ -105,6 +119,7 @@ export function BestSellers() {
       query={{ bestSeller: true, availability: "in-stock", sort: "best-selling" }}
       href="/best-sellers"
       cta="Shop best sellers"
+      fallback={{ title: "Explore our collection", subtitle: "Discover products for your home and everyday routine.", sort: "featured" }}
       tone="sand"
     />
   );
@@ -119,6 +134,7 @@ export function TrendingProducts() {
       query={{ trending: true, availability: "in-stock", sort: "featured" }}
       href="/shop?trending=true"
       cta="See what's trending"
+      fallback={{ title: "Everyday finds", subtitle: "More products from across our catalogue.", sort: "featured" }}
     />
   );
 }
@@ -132,6 +148,7 @@ export function DealsSection() {
       query={{ onSale: true, availability: "in-stock", sort: "price-asc" }}
       href="/deals"
       cta="Shop all deals"
+      fallback={{ title: "Finds for every budget", subtitle: "Browse our catalogue, starting with the lowest prices.", sort: "price-asc" }}
       tone="sand"
     />
   );
