@@ -68,7 +68,7 @@ export function ProductCard({
               : `Save ${product.name} to wishlist`
           }
           aria-pressed={wished}
-          className="-mr-1 -mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-accent"
+          className="-mr-1 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-accent"
         >
           <Heart
             size={16}
@@ -166,19 +166,21 @@ export function ProductCard({
         </Link>
       </h3>
 
-      <Rating
+      <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-ink-soft">{product.shortDescription}</p>
+
+      {product.reviewCount > 0 && <Rating
         value={product.rating}
         size={12}
         showValue
         className="mt-2 mb-4"
-      />
+      />}
 
-      <div className="mt-auto">
+      <div className="mt-auto pt-4">
         {hasOptions ? (
           <Link
             href={`/product/${product.slug}`}
             className={cn(
-              "flex h-10 w-full items-center justify-center gap-2 rounded-full bg-mint text-[12px] font-medium text-mint-ink transition-colors hover:bg-mint-deep",
+              "flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand text-[12px] font-medium text-paper transition-colors hover:bg-brand-hover",
               soldOut && "pointer-events-none opacity-50",
             )}
           >
@@ -190,7 +192,7 @@ export function ProductCard({
             type="button"
             onClick={quickAdd}
             disabled={soldOut}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-mint text-[12px] font-medium text-mint-ink transition-colors hover:bg-mint-deep disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand text-[12px] font-medium text-paper transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ShoppingBasket size={14} strokeWidth={1.7} />
             {soldOut ? "Sold out" : adding ? "Added" : "Add to cart"}

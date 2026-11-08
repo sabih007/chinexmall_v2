@@ -1,181 +1,69 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
+﻿import { ArrowRight, ArrowUpRight, Banknote, PackageCheck, Sparkles, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Primitives";
+import { ButtonLink } from "@/components/ui/Button";
+import { getProducts } from "@/lib/repository";
 import { formatPrice } from "@/lib/format";
-import { photo } from "@/lib/images";
-import { cn } from "@/lib/utils";
+import { deliveryMethods, site } from "@/lib/site";
 
-/**
- * Hero mosaic (spec §12, §13): one large offer panel beside a stack of three
- * smaller promo tiles, each on its own pastel ground.
- */
-
-const HERO_MAIN = photo("1608043152269-423dbba4e7e1", 1200);
-const PROMO_TALL = photo("1618221195710-dd6b41faaea6", 800);
-const PROMO_ONE = photo("1550581190-9c1c48d21d6c", 600);
-const PROMO_TWO = photo("1584589167171-541ce45f1eea", 600);
-
-const ease = [0.16, 1, 0.3, 1] as const;
-
-export function Hero() {
-  const reduce = useReducedMotion();
-
-  const rise = (delay: number) =>
-    reduce
-      ? {}
-      : {
-          initial: { opacity: 0, y: 20 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.8, delay, ease },
-        };
+export async function Hero() {
+  let { items } = await getProducts({ categories: ["beauty-care"], availability: "in-stock", sort: "featured", limit: 2 });
+  if (items.length === 0) {
+    ({ items } = await getProducts({ availability: "in-stock", sort: "featured", limit: 2 }));
+  }
+  const [product, extra] = items;
+  const freeDelivery = deliveryMethods.some((method) => method.id === "standard" && method.freeOverThreshold);
 
   return (
-    <section className="pt-6 md:pt-8">
+    <section aria-label="Discover ChineXmall" className="pb-3 pt-4 sm:pt-6 lg:pt-8">
       <Container>
-        <div className="grid gap-4 lg:grid-cols-[1.55fr_1fr]">
-          {/* ---- Main offer panel ---- */}
-          <motion.div
-            {...rise(0)}
-            className="relative overflow-hidden rounded-tile bg-tint-pink px-7 py-10 sm:px-10 sm:py-14 lg:py-16"
-          >
-            <div className="relative z-10 max-w-[19rem] sm:max-w-[22rem]">
-              <span className="inline-flex rounded-full bg-brand px-4 py-1.5 text-[11.5px] font-medium text-paper">
-                100% brand new · direct import
-              </span>
+        <div className="relative isolate overflow-hidden rounded-[28px] bg-brand-deep text-white sm:rounded-[32px]">
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-brand-deep via-brand-deep to-brand/40" />
+          <div aria-hidden className="pointer-events-none absolute -right-44 -top-60 -z-10 h-[650px] w-[650px] rounded-full border border-white/10" />
+          <div aria-hidden className="pointer-events-none absolute -right-24 -top-40 -z-10 h-[490px] w-[490px] rounded-full border border-white/5" />
 
-              <h1 className="display mt-6 text-[2.5rem] leading-[1.05] text-brand-deep sm:text-[3.25rem]">
-                Smart gadgets
+          <div className="grid items-center gap-8 px-6 pb-8 pt-9 sm:px-10 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:p-12 xl:px-16 xl:py-14">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-[10px] font-medium tracking-[0.14em] text-gold sm:text-[11px]"><Sparkles size={13} /> THOUGHTFULLY SELECTED. EVERYDAY USEFUL.</p>
+              <h1 className="mt-6 max-w-xl text-[clamp(2.15rem,10vw,2.65rem)] font-semibold leading-[1.08] tracking-[-0.045em] sm:text-[3.6rem] xl:text-[4.35rem]">
+                Small finds.<br />A little more<br /><span className="font-serif italic font-normal tracking-[-0.025em] text-gold">extraordinary.</span>
               </h1>
-              <p className="mt-2 text-[1.35rem] font-semibold text-ink-soft sm:text-[1.6rem]">
-                for everyday life
-              </p>
-
-              <p className="mt-5 text-[15px] text-ink-soft/75">
-                Starting at{" "}
-                <span className="text-[1.75rem] font-bold text-ink">
-                  {formatPrice(899)}
-                </span>
-              </p>
-
-              <ButtonLink href="/shop" size="lg" className="mt-7">
-                Shop now
-              </ButtonLink>
+              <p className="mt-5 max-w-[25rem] text-sm leading-[1.85] text-white/70 sm:text-[15px]">Thoughtful touches for your home. Clever upgrades for your day. Discover useful things you’ll love living with.</p>
+              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4 sm:mt-8">
+                <ButtonLink href="/shop" size="lg" className="group border border-gold bg-gold px-5 text-ink shadow-card hover:bg-gold-hover">Explore the collection <ArrowUpRight size={17} className="transition-transform motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:translate-x-0.5" /></ButtonLink>
+                <Link href="/best-sellers" className="inline-flex min-h-11 items-center gap-2 text-xs font-medium text-white/85 transition-colors hover:text-gold">Discover best sellers <ArrowRight size={15} /></Link>
+              </div>
             </div>
 
-            {/* Product photography bleeding off the right edge */}
-            <div className="pointer-events-none absolute -right-6 bottom-0 top-0 hidden w-[46%] sm:block">
-              <Image
-                src={HERO_MAIN}
-                alt=""
-                aria-hidden
-                fill
-                priority
-                sizes="(min-width:1024px) 34vw, 46vw"
-                className="object-cover object-center [mask-image:linear-gradient(to_right,transparent,black_45%)]"
-              />
-            </div>
-          </motion.div>
-
-          {/* ---- Promo stack ---- */}
-          <div className="grid gap-4">
-            <motion.div {...rise(0.1)} className="min-h-[210px]">
-              <PromoTile
-                href="/new-arrivals"
-                image={PROMO_TALL}
-                title="New in this week"
-                caption="Only"
-                price={formatPrice(1299)}
-                tone="bg-gradient-to-br from-tint-lilac to-tint-blue"
-                titleClass="text-brand-deep"
-                tall
-              />
-            </motion.div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <motion.div {...rise(0.18)}>
-                <PromoTile
-                  href="/deals"
-                  image={PROMO_ONE}
-                  title="Up to 40% off"
-                  caption="This week only"
-                  tone="bg-tint-blue"
-                  titleClass="text-brand-deep"
-                />
-              </motion.div>
-              <motion.div {...rise(0.26)}>
-                <PromoTile
-                  href="/collections/kitchen"
-                  image={PROMO_TWO}
-                  title="Kitchen picks"
-                  caption="Everyday essentials"
-                  tone="bg-tint-peach"
-                  titleClass="text-ink"
-                />
-              </motion.div>
-            </div>
+            {product && (
+              <div className="relative min-w-0 lg:py-3">
+                <Link href={`/product/${product.slug}`} className="group block overflow-hidden rounded-[22px] border border-white/20 bg-sand p-2.5 text-ink shadow-[0_24px_60px_-25px_rgba(0,0,0,0.5)] sm:rounded-[26px] sm:p-3">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-[15px] bg-white sm:rounded-[18px]">
+                    <Image src={product.images[0]} alt={product.name} fill loading="eager" fetchPriority="high" sizes="(min-width:1024px) 42vw, 85vw" className="object-cover object-center transition-transform duration-700 motion-safe:group-hover:scale-[1.04]" />
+                    <span className="absolute left-3 top-3 rounded-full border border-line bg-white/95 px-3 py-1.5 text-[10px] font-medium text-ink-soft sm:left-4 sm:top-4">The spotlight edit</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 px-2 py-4 sm:px-3">
+                    <div className="min-w-0"><p className="text-[10px] font-medium uppercase tracking-[0.12em] text-ink-soft">{product.productType}</p><h2 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug sm:text-base">{product.name}</h2><p className="mt-1.5 text-sm font-semibold tabular-nums text-brand-deep">{formatPrice(product.price)}</p></div>
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-deep text-gold transition-colors group-hover:bg-brand"><ArrowUpRight size={20} /></span>
+                  </div>
+                </Link>
+                {extra && <Link href={`/product/${extra.slug}`} className="group mt-3 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/5 p-3 transition-colors hover:bg-white/10">
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white"><Image src={extra.thumbnail || extra.images[0]} alt="" fill sizes="48px" className="object-cover" /></div>
+                  <div className="min-w-0 flex-1"><p className="text-[10px] text-gold">Another find to explore</p><p className="mt-0.5 truncate text-xs font-medium">{extra.name}</p></div>
+                  <span className="shrink-0 text-xs tabular-nums text-white/80">{formatPrice(extra.price)}</span><ArrowUpRight size={15} className="shrink-0 text-white/60" />
+                </Link>}
+              </div>
+            )}
           </div>
+
+          <ul className="grid gap-4 border-t border-white/10 bg-black/10 px-6 py-5 text-xs text-white/75 sm:grid-cols-3 sm:gap-5 sm:px-10 lg:px-12 xl:px-16">
+            <li className="flex items-center gap-2.5"><Banknote size={18} strokeWidth={1.5} className="shrink-0 text-gold" />Cash on delivery available</li>
+            <li className="flex items-center gap-2.5"><PackageCheck size={18} strokeWidth={1.5} className="shrink-0 text-gold" />Brand-new products</li>
+            <li className="flex items-center gap-2.5"><Truck size={18} strokeWidth={1.5} className="shrink-0 text-gold" />{freeDelivery ? `Free standard delivery from ${formatPrice(site.freeShippingThreshold)}` : "Nationwide delivery"}</li>
+          </ul>
         </div>
       </Container>
     </section>
-  );
-}
-
-function PromoTile({
-  href,
-  image,
-  title,
-  caption,
-  price,
-  tone,
-  titleClass,
-  tall,
-}: {
-  href: string;
-  image: string;
-  title: string;
-  caption: string;
-  price?: string;
-  tone: string;
-  titleClass: string;
-  tall?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "group relative flex h-full flex-col justify-between overflow-hidden rounded-tile p-6",
-        tone,
-        tall ? "min-h-[210px]" : "min-h-[170px]",
-      )}
-    >
-      <div className="relative z-10 max-w-[62%]">
-        <p className={cn("text-[17px] font-semibold leading-snug", titleClass)}>
-          {title}
-        </p>
-        <p className="mt-1.5 text-[12px] text-ink-soft/70">{caption}</p>
-        {price && (
-          <p className="mt-1 text-[22px] font-bold text-ink">{price}</p>
-        )}
-      </div>
-
-      <span className="relative z-10 mt-5 inline-flex w-fit items-center rounded-full bg-paper px-4 py-2 text-[12px] font-medium text-ink transition-transform duration-300 group-hover:-translate-y-0.5">
-        Shop now
-      </span>
-
-      <div className="pointer-events-none absolute -right-2 bottom-0 top-0 w-[42%]">
-        <Image
-          src={image}
-          alt=""
-          aria-hidden
-          fill
-          sizes="(min-width:1024px) 18vw, 40vw"
-          className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05] [mask-image:linear-gradient(to_right,transparent,black_55%)]"
-        />
-      </div>
-    </Link>
   );
 }

@@ -9,9 +9,10 @@ function MoreLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="group inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[12.5px] font-medium transition-colors hover:border-brand hover:text-brand"
+      aria-label={label}
+      className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-brand/25 bg-paper px-6 py-2.5 text-sm font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft"
     >
-      {label}
+      Show more
       <ArrowRight
         size={14}
         strokeWidth={1.8}
@@ -46,7 +47,7 @@ async function ProductSection({
   tone?: "paper" | "sand";
   id?: string;
 }) {
-  const { items } = await getProducts(query);
+  const { items } = await getProducts({ ...query, limit: 5 });
   if (items.length === 0) return null;
 
   return (
@@ -56,7 +57,6 @@ async function ProductSection({
           eyebrow={eyebrow}
           title={title}
           subtitle={subtitle}
-          action={<MoreLink href={href} label={cta} />}
         />
       </Container>
 
@@ -69,6 +69,11 @@ async function ProductSection({
           <ProductRail products={items} />
         </Container>
       )}
+      <Container>
+        <div className="mt-7 flex justify-center">
+          <MoreLink href={href} label={cta} />
+        </div>
+      </Container>
     </Section>
   );
 }
@@ -77,9 +82,9 @@ export function NewArrivals() {
   return (
     <ProductSection
       eyebrow="Just in"
-      title="Just landed"
+      title="New arrivals"
       subtitle="Fresh products, straight from our latest imports."
-      query={{ newArrival: true, sort: "newest", limit: 8 }}
+      query={{ newArrival: true, availability: "in-stock", sort: "newest" }}
       href="/new-arrivals"
       cta="View all new arrivals"
     />
@@ -89,10 +94,10 @@ export function NewArrivals() {
 export function BestSellers() {
   return (
     <ProductSection
-      eyebrow="Proven"
-      title="Customer favourites"
-      subtitle="The products everyone keeps coming back for."
-      query={{ bestSeller: true, sort: "best-selling", limit: 8 }}
+      eyebrow="Discover the favourites"
+      title="Hot selling"
+      subtitle="Explore our best-seller selection for your home and everyday routine."
+      query={{ bestSeller: true, availability: "in-stock", sort: "best-selling" }}
       href="/best-sellers"
       cta="Shop best sellers"
       tone="sand"
@@ -105,11 +110,10 @@ export function TrendingProducts() {
     <ProductSection
       eyebrow="Right now"
       title="Trending now"
-      subtitle="What's making its way into everyone's cart."
-      query={{ trending: true, sort: "featured", limit: 8 }}
+      subtitle="Discover trending finds from across our catalogue."
+      query={{ trending: true, availability: "in-stock", sort: "featured" }}
       href="/shop?trending=true"
       cta="See what's trending"
-      layout="rail"
     />
   );
 }
@@ -117,10 +121,10 @@ export function TrendingProducts() {
 export function DealsSection() {
   return (
     <ProductSection
-      eyebrow="Limited"
+      eyebrow="A little more for less"
       title="Deals you'll love"
-      subtitle="Genuine reductions on pieces we are restocking — while they last."
-      query={{ onSale: true, sort: "price-asc", limit: 8 }}
+      subtitle="Explore products with savings on their regular prices."
+      query={{ onSale: true, availability: "in-stock", sort: "price-asc" }}
       href="/deals"
       cta="Shop all deals"
       tone="sand"

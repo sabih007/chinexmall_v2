@@ -1,39 +1,22 @@
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { Hero } from "@/components/home/Hero";
-import { ImportStory } from "@/components/home/ImportStory";
-import { Newsletter } from "@/components/home/Newsletter";
-import {
-  BestSellers,
-  DealsSection,
-  NewArrivals,
-  TrendingProducts,
-} from "@/components/home/ProductSections";
-import { PromoBanner } from "@/components/home/PromoBanner";
+import { BestSellers, DealsSection, NewArrivals, TrendingProducts } from "@/components/home/ProductSections";
 import { Reviews } from "@/components/home/Reviews";
-import { ShopTheLook } from "@/components/home/ShopTheLook";
-import { SocialSection } from "@/components/home/SocialSection";
-import { WhyShop } from "@/components/home/WhyShop";
+import { ShoppingAssurance } from "@/components/home/ShoppingAssurance";
+import { FreeShippingBanner } from "@/components/home/FreeShippingBanner";
 
-/**
- * Homepage running the merchandising order from spec §11 — this page sells
- * products first and talks about the business second.
- */
 export default function HomePage() {
   return (
     <>
       <Hero />
       <CategoryGrid />
-      <NewArrivals />
+      <FreeShippingBanner />
       <BestSellers />
-      <PromoBanner />
       <TrendingProducts />
-      <WhyShop />
-      <ImportStory />
-      <ShopTheLook />
+      <ShoppingAssurance />
+      <NewArrivals />
       <DealsSection />
       <Reviews />
-      <SocialSection />
-      <Newsletter />
     </>
   );
 }

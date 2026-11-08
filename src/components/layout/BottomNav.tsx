@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Home, Search, ShoppingBag, Store } from "lucide-react";
+import { Heart, Home, LayoutGrid, ShoppingBag, Store } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useStore } from "@/components/providers/StoreProvider";
@@ -16,7 +16,7 @@ export function BottomNav() {
     count,
     wishlist,
     openCart,
-    openSearch,
+    openMenu,
     hydrated,
     cartOpen,
     searchOpen,
@@ -40,19 +40,19 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
     >
       <div className="flex h-14 items-stretch">
-        <Link href="/" className={itemClass(isActive("/"))}>
+        <Link href="/" aria-current={isActive("/") ? "page" : undefined} className={itemClass(isActive("/"))}>
           <Home size={18} strokeWidth={1.5} />
           Home
         </Link>
 
-        <Link href="/shop" className={itemClass(isActive("/shop"))}>
+        <Link href="/shop" aria-current={isActive("/shop") ? "page" : undefined} className={itemClass(isActive("/shop"))}>
           <Store size={18} strokeWidth={1.5} />
           Shop
         </Link>
 
-        <button type="button" onClick={openSearch} className={itemClass(false)}>
-          <Search size={18} strokeWidth={1.5} />
-          Search
+        <button type="button" onClick={openMenu} className={itemClass(isActive("/collections/"))}>
+          <LayoutGrid size={18} strokeWidth={1.5} />
+          Categories
         </button>
 
         <Link href="/wishlist" className={itemClass(isActive("/wishlist"))}>

@@ -8,13 +8,14 @@ import { footerNav, legalNav, site, socials } from "@/lib/site";
 /** Full-bleed navy footer, the design's closing block. */
 export function Footer() {
   const year = new Date().getFullYear();
+  const columns = footerNav.filter((column) => column.title !== "Categories");
 
   return (
     <footer className="bg-brand-deep text-paper">
       <Container>
-        <div className="grid gap-12 py-16 md:grid-cols-12 md:py-20">
+        <div className="grid gap-10 py-12 lg:grid-cols-12 lg:gap-12 lg:py-16">
           {/* Brand + contact */}
-          <div className="md:col-span-5 lg:col-span-4">
+          <div className="lg:col-span-4">
             <Link href="/" aria-label={`${site.name} home`} className="inline-block">
               <Logo variant="white" className="h-9" />
             </Link>
@@ -61,8 +62,8 @@ export function Footer() {
           </div>
 
           {/* Link columns */}
-          <div className="grid grid-cols-2 gap-8 md:col-span-7 md:grid-cols-4 lg:col-span-7 lg:col-start-6">
-            {footerNav.map((column) => (
+          <div className="grid grid-cols-2 gap-x-8 gap-y-9 sm:grid-cols-3 lg:col-span-7 lg:col-start-6">
+            {columns.map((column) => (
               <nav key={column.title} aria-label={column.title}>
                 <h2 className="mb-5 text-[16px] font-semibold">{column.title}</h2>
                 <ul className="space-y-3">
@@ -70,7 +71,7 @@ export function Footer() {
                     <li key={`${column.title}-${link.href}-${link.label}`}>
                       <Link
                         href={link.href}
-                        className="text-[13px] text-paper/70 transition-colors hover:text-paper"
+                        className="inline-block py-1 text-[13px] leading-relaxed text-paper/70 transition-colors hover:text-paper"
                       >
                         {link.label}
                       </Link>

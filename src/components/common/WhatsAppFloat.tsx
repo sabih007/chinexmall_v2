@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useStore } from "@/components/providers/StoreProvider";
 import { site } from "@/lib/site";
 import { whatsappLink } from "@/lib/whatsapp";
 
 /** Floating WhatsApp button (spec §37). */
 export function WhatsAppFloat() {
+  const pathname = usePathname();
   const { cartOpen, searchOpen, menuOpen } = useStore();
   const [visible, setVisible] = useState(false);
 
@@ -17,7 +19,7 @@ export function WhatsAppFloat() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  if (cartOpen || searchOpen || menuOpen) return null;
+  if (cartOpen || searchOpen || menuOpen || pathname === "/checkout") return null;
 
   return (
     <a
@@ -25,7 +27,7 @@ export function WhatsAppFloat() {
       target="_blank"
       rel="noreferrer noopener"
       aria-label={`Chat with ${site.shortName} on WhatsApp`}
-      className={`fixed bottom-[4.75rem] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] shadow-[0_6px_24px_rgba(0,0,0,0.18)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105 lg:bottom-6 lg:right-6 lg:h-14 lg:w-14 ${
+      className={`fixed ${pathname.startsWith("/product/") ? "bottom-40" : "bottom-[4.75rem]"} right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] shadow-[0_6px_24px_rgba(0,0,0,0.18)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105 lg:bottom-6 lg:right-6 lg:h-14 lg:w-14 ${
         visible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none translate-y-4 opacity-0"

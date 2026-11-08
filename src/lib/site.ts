@@ -22,12 +22,12 @@ export const site = {
   freeShippingThreshold: 3500,
   whatsapp: {
     /** International format, digits only. */
-    number: "923009207890",
-    display: "+92 300 9207890",
+    number: "923340319783",
+    display: "0334 0319783",
   },
   email: "info@chinexmall.com",
-  phone: "+92 300 9207890",
-  address: "Main Boulevard, Gulberg III, Lahore, Pakistan",
+  phone: "+92 334 0319783",
+  address: "Block M, North Nazimabad, Karachi, Pakistan",
   hours: "Mon – Sat, 10:00 – 19:00",
   /** Default shipping copy on a product page, unless a product overrides it. */
   shippingBlurb:
@@ -40,76 +40,6 @@ export const announcements: string[] = [
   "Every product is brand new — never used, never refurbished",
   "New stock landing every week",
   "Direct import · Smart prices",
-];
-
-export interface NavLink {
-  label: string;
-  href: string;
-  /** Optional mega-menu column of child links. */
-  children?: { label: string; href: string }[];
-  emphasis?: boolean;
-}
-
-export const primaryNav: NavLink[] = [
-  {
-    label: "Shop",
-    href: "/shop",
-    children: [
-      { label: "All Products", href: "/shop" },
-      { label: "New Arrivals", href: "/new-arrivals" },
-      { label: "Best Sellers", href: "/best-sellers" },
-      { label: "Deals", href: "/deals" },
-    ],
-  },
-  {
-    label: "Home",
-    href: "/collections/home-decor",
-    children: [
-      { label: "Home Décor", href: "/collections/home-decor" },
-      { label: "Organization", href: "/collections/organization" },
-      { label: "Bathroom", href: "/collections/bathroom" },
-      { label: "Cleaning", href: "/collections/cleaning" },
-    ],
-  },
-  { label: "Kitchen", href: "/collections/kitchen" },
-  {
-    label: "Lifestyle",
-    href: "/collections/lifestyle",
-    children: [
-      { label: "Lifestyle", href: "/collections/lifestyle" },
-      { label: "Beauty & Care", href: "/collections/beauty-care" },
-      { label: "Office & Desk", href: "/collections/office" },
-      { label: "Kids", href: "/collections/kids" },
-    ],
-  },
-  {
-    label: "Gadgets",
-    href: "/collections/gadgets",
-    children: [
-      { label: "Gadgets", href: "/collections/gadgets" },
-      { label: "Mobile Accessories", href: "/collections/mobile-accessories" },
-      { label: "Car Accessories", href: "/collections/car" },
-    ],
-  },
-  { label: "New Arrivals", href: "/new-arrivals" },
-  { label: "Deals", href: "/deals", emphasis: true },
-];
-
-/** Feeds the header's "All categories" dropdown. */
-export const categoryNav: { label: string; href: string }[] = [
-  { label: "Home Décor", href: "/collections/home-decor" },
-  { label: "Kitchen", href: "/collections/kitchen" },
-  { label: "Organization", href: "/collections/organization" },
-  { label: "Bathroom", href: "/collections/bathroom" },
-  { label: "Cleaning", href: "/collections/cleaning" },
-  { label: "Lifestyle", href: "/collections/lifestyle" },
-  { label: "Beauty & Care", href: "/collections/beauty-care" },
-  { label: "Office & Desk", href: "/collections/office" },
-  { label: "Kids", href: "/collections/kids" },
-  { label: "Gadgets", href: "/collections/gadgets" },
-  { label: "Mobile Accessories", href: "/collections/mobile-accessories" },
-  { label: "Car Accessories", href: "/collections/car" },
-  { label: "Gifts", href: "/collections/gifts" },
 ];
 
 export const footerNav: { title: string; links: { label: string; href: string }[] }[] = [

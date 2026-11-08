@@ -10,7 +10,9 @@ import { formatDate } from "@/lib/format";
 
 /** Customer reviews (spec §35). Horizontal carousel on mobile, grid above. */
 export async function Reviews() {
+  if (reviewsArePlaceholder) return null;
   const reviews = await getReviews(6);
+  if (reviews.length === 0) return null;
 
   const cards = await Promise.all(
     reviews.map(async (review) => ({

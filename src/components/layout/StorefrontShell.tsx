@@ -10,6 +10,7 @@ import { Header } from "@/components/layout/Header";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { StoreProvider } from "@/components/providers/StoreProvider";
 import { SearchOverlay } from "@/components/search/SearchOverlay";
+import { getShopCategories, shopLinks } from "@/lib/navigation";
 
 /**
  * Everything that wraps a shopper-facing page: announcement bar, header,
@@ -21,7 +22,8 @@ import { SearchOverlay } from "@/components/search/SearchOverlay";
  * also what scopes the Meta Pixel to shopper traffic and keeps it off the
  * dashboard.
  */
-export function StorefrontShell({ children }: { children: ReactNode }) {
+export async function StorefrontShell({ children }: { children: ReactNode }) {
+  const categories = await getShopCategories();
   return (
     <StoreProvider>
       <a
@@ -32,13 +34,13 @@ export function StorefrontShell({ children }: { children: ReactNode }) {
       </a>
 
       <AnnouncementBar />
-      <Header />
+      <Header categories={categories} links={shopLinks} />
 
       <main id="main">{children}</main>
 
       <Footer />
 
-      <MobileNav />
+      <MobileNav categories={categories} links={shopLinks} />
       <CartDrawer />
       <SearchOverlay />
       <BottomNav />

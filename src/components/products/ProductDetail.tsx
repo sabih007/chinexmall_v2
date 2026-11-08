@@ -12,7 +12,7 @@ import { Accordion } from "@/components/ui/Accordion";
 import { Rating, SpecRow } from "@/components/ui/Primitives";
 import { defaultSelections, resolveVariant } from "@/lib/cart";
 import { discountPercent, formatPrice } from "@/lib/format";
-import { site } from "@/lib/site";
+import { deliveryMethods, site } from "@/lib/site";
 import type { Product } from "@/lib/types";
 import { whatsappLink } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const soldOut = product.stock <= 0;
   const lowStock = !soldOut && product.stock <= 5;
   const wished = hydrated && isWishlisted(product.slug);
+  const standardDelivery = deliveryMethods.find((method) => method.id === "standard")!;
 
   function selectVariant(optionId: string, value: string) {
     const next = { ...selections, [optionId]: value };
@@ -106,9 +107,21 @@ export function ProductDetail({ product }: { product: Product }) {
               </>
             )}
           </div>
-          <p className="mt-1.5 text-[11.5px] text-muted">
-            Inclusive of taxes. Delivery calculated at checkout.
+          <p className="mt-1.5 text-xs text-ink-soft">
+            Inclusive of taxes. Cash on delivery available.
           </p>
+
+          <ul className="mt-5 space-y-2 text-sm leading-relaxed text-ink-soft">
+            {product.details.slice(0, 3).map((detail) => (
+              <li key={detail} className="flex gap-2"><span aria-hidden className="text-brand">✓</span>{detail}</li>
+            ))}
+          </ul>
+
+          <div className="mt-5 rounded-card border border-line bg-sand p-4 text-xs leading-relaxed text-ink-soft">
+            <p className="font-medium text-ink">Standard delivery: {formatPrice(standardDelivery.fee)} · {standardDelivery.eta}</p>
+            {standardDelivery.freeOverThreshold && <p className="mt-1">Free standard delivery over {formatPrice(site.freeShippingThreshold)}.</p>}
+            <Link href="/policies/refund" className="mt-2 inline-block text-brand underline underline-offset-4">7-day returns · See conditions</Link>
+          </div>
 
           <p className="mt-6 text-[14.5px] leading-relaxed text-muted">
             {product.description}
@@ -192,7 +205,7 @@ export function ProductDetail({ product }: { product: Product }) {
               className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-mint text-[13px] font-medium text-mint-ink transition-colors hover:bg-mint-deep"
             >
               <MessageCircle size={15} strokeWidth={1.6} />
-              Order via WhatsApp
+              Ask about this product
             </a>
           </div>
 

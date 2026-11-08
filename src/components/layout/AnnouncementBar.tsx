@@ -1,31 +1,13 @@
-import { announcements } from "@/lib/site";
+import Link from "next/link";
+import { formatPrice } from "@/lib/format";
+import { site } from "@/lib/site";
 
-/**
- * Configurable announcement bar (spec §08). Multiple messages scroll as one
- * seamless marquee; edit `announcements` in src/lib/site.ts to change them.
- */
+/** A quiet, readable offer instead of a continuously moving message. */
 export function AnnouncementBar() {
-  if (announcements.length === 0) return null;
-
-  const track = [...announcements, ...announcements];
-
   return (
-    <div className="relative z-50 overflow-hidden bg-brand text-paper">
-      <div className="flex h-9 items-center">
-        <div className="animate-marquee flex shrink-0 items-center whitespace-nowrap will-change-transform">
-          {track.map((message, i) => (
-            <span
-              key={`${message}-${i}`}
-              className="flex items-center text-[12px] font-medium text-paper/90"
-            >
-              {message}
-              <span aria-hidden className="px-6 text-paper/40">
-                •
-              </span>
-            </span>
-          ))}
-        </div>
-      </div>
+    <div className="bg-brand-deep px-4 py-2 text-center text-[11px] leading-relaxed text-paper sm:text-xs">
+      Cash on delivery available <span aria-hidden className="px-2 text-white/40">·</span>
+      <Link href="/policies/shipping" className="underline underline-offset-4 hover:text-gold">Free standard delivery over {formatPrice(site.freeShippingThreshold)}</Link>
     </div>
   );
 }
